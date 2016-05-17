@@ -57,4 +57,8 @@ public class Controller : MonoBehaviour {
                 return false;
         }
     }
+
+    public void hapticPulse(ushort duration) {
+        controller.TriggerHapticPulse(duration);
+    }
 }
