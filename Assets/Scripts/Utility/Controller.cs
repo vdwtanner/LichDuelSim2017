@@ -8,6 +8,8 @@ public class Controller : MonoBehaviour {
 
     private Valve.VR.EVRButtonId touchpadButton = Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad;
 
+    private Valve.VR.EVRButtonId menuButton = Valve.VR.EVRButtonId.k_EButton_ApplicationMenu;
+
     private SteamVR_TrackedObject trackedObj;
     private SteamVR_Controller.Device controller { get { return SteamVR_Controller.Input((int)trackedObj.index); } }
 
@@ -24,6 +26,8 @@ public class Controller : MonoBehaviour {
                 return controller.GetPressDown(triggerButton);
             case "touchpad":
                 return controller.GetPressDown(touchpadButton);
+            case "menu":
+                return controller.GetPressDown(menuButton);
             default:
                 Debug.LogWarning("Invalid button requested: " + buttonName);
                 return false;
@@ -38,6 +42,8 @@ public class Controller : MonoBehaviour {
                 return controller.GetPressUp(triggerButton);
             case "touchpad":
                 return controller.GetPressUp(touchpadButton);
+            case "menu":
+                return controller.GetPressUp(menuButton);
             default:
                 Debug.LogWarning("Invalid button requested: " + buttonName);
                 return false;
@@ -52,6 +58,8 @@ public class Controller : MonoBehaviour {
                 return controller.GetPress(triggerButton);
             case "touchpad":
                 return controller.GetPress(touchpadButton);
+            case "menu":
+                return controller.GetPress(menuButton);
             default:
                 Debug.LogWarning("Invalid button requested: " + buttonName);
                 return false;
@@ -60,5 +68,15 @@ public class Controller : MonoBehaviour {
 
     public void hapticPulse(ushort duration) {
         controller.TriggerHapticPulse(duration);
+    }
+
+    public Vector3 getVelocity() {
+        Transform origin = trackedObj.origin ? trackedObj.origin : trackedObj.transform.parent;
+        return origin.TransformVector(controller.velocity);
+    }
+
+    public Vector3 getAngularVelocity() {
+        Transform origin = trackedObj.origin ? trackedObj.origin : trackedObj.transform.parent;
+        return origin.TransformVector(controller.angularVelocity);
     }
 }

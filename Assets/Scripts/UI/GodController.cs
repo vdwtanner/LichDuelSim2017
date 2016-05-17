@@ -4,6 +4,7 @@ using System.Collections;
 public class GodController : MonoBehaviour {
 
     Controller controller;
+    GameObject hmd;
 
     //Teleporting
     public Color teleportRayColor;
@@ -18,21 +19,37 @@ public class GodController : MonoBehaviour {
     //Grabbing
     public GameObject objectToGrab {get; set;}
 
-    
+    //Possession
+    public GameObject objectToPossess { get; set; }
+    public GameObject possesionEffect;
+    //Possession Particle Effect
+    private ParticleSystem pe;
+    private float posessionTimer;
+    public bool possessing { get; set; }
+
+
 	// Use this for initialization
 	void Start () {
         controller = gameObject.GetComponent<Controller>();
+        hmd = transform.parent.FindChild("Camera (eye)").gameObject;
         GameObject go = (GameObject)Instantiate(teleportationChargeEffect, transform.position, new Quaternion());
         tce = go.GetComponent<ParticleSystem>();
+        tce.transform.parent = transform;
         tce.Stop();
         ParticleSystem.EmissionModule em = ps.emission;
         em.enabled = false;
+        go = (GameObject)Instantiate(possesionEffect, transform.position, new Quaternion());
+        pe = go.GetComponent<ParticleSystem>();
+        pe.Stop();
+        pe.transform.parent = transform;
     }
 	
 	// Update is called once per frame
 	void Update () {
         teleportationManager();
         grabManager();
+        possessionManager();
+        calibrationManager();
 	}
 
     void teleportationManager() {
@@ -41,7 +58,7 @@ public class GodController : MonoBehaviour {
             Debug.DrawRay(transform.position, forward * 200, Color.green);
         }
         if (controller.getButtonPressed("touchpad") && (!ps.emission.enabled || tce.isPlaying)) {
-            tce.transform.position = transform.position;
+            //tce.transform.position = transform.position;
             if (!tce.isPlaying) {
                 tce.Play();
                 Debug.Log(transform.name + " controller began particle emmission.");
@@ -70,7 +87,11 @@ public class GodController : MonoBehaviour {
             tce.Stop();
             Debug.Log(transform.name + " controller stopped particle emmission.");
             iOwnPS = false;
-            transform.parent.parent.position = ps.transform.position;
+            Vector3 pos = ps.transform.position;
+            Vector3 offset = hmd.transform.localPosition;
+            offset.y = 0;
+            pos -= offset * transform.parent.localScale.x;
+            transform.parent.parent.position = pos;
         }
     }
 
@@ -78,9 +99,71 @@ public class GodController : MonoBehaviour {
         if(objectToGrab != null) {
             if (controller.getButtonPressed("trigger")) {
                 objectToGrab.transform.parent = transform;
+                objectToGrab.GetComponent<Rigidbody>().useGravity = false;
+                objectToGrab.GetComponent<Rigidbody>().velocity = Vector3.zero;
             } else if (objectToGrab.transform.parent == transform) {
                 objectToGrab.transform.parent = null;
+                objectToGrab.GetComponent<Rigidbody>().useGravity = true;
+                objectToGrab.GetComponent<Rigidbody>().velocity = controller.getVelocity();
             }
+        }
+    }
+
+    void possessionManager() {
+        if (objectToPossess != null) {
+            if (controller.getButtonPressed("grip")) {
+                if (pe.isStopped) {
+                    posessionTimer = objectToPossess.GetComponent<Possessable>().timeToPossess;
+                    pe.Play();
+                }
+                posessionTimer -= Time.deltaTime;
+                if(posessionTimer <= 0) {
+                    pe.Emit(50);
+                    possessing = false;
+                    pe.Stop();
+                    possess();
+                }
+            }else if (pe.isPlaying) {
+                pe.Stop();
+            }
+        }else if (possessing) {
+            pe.Stop();
+        }
+    }
+
+    void possess() {
+        //Do an animation. That would be cool
+        Possessable p = objectToPossess.GetComponent<Possessable>();
+        //float modelHeight = p.getModelHeight();
+        Transform newHMDLocation = p.getPreferredHMDPosition();
+        float height = newHMDLocation.localPosition.y * p.getModelScale().y;
+        float scale = height/Config.HMDStadningHeight;
+        scale *= Config.godScale;
+        Vector3 playAreaScale = new Vector3(scale, scale, scale);
+        transform.parent.localScale = playAreaScale;
+
+        //This will need to be changed when we finally have real models.
+        transform.parent.parent.position = p.transform.position;
+        transform.parent.BroadcastMessage("switchControl", "possession");
+    }
+
+    void calibrationManager() {
+        if (controller.getButtonDown("menu")) {
+            Transform hmd = transform.parent.FindChild("Camera (eye)").transform;
+            float scale = transform.parent.lossyScale.y;
+            Config.HMDStadningHeight = hmd.localPosition.y * scale;
+            Debug.Log("Height Calibrated to " + Config.HMDStadningHeight);
+        }
+    }
+
+    public void switchControl(string control) {
+        switch (control) {
+            case "possession":
+                this.enabled = false;
+                break;
+            case "god":
+                this.enabled = true;
+                break;
         }
     }
 }
