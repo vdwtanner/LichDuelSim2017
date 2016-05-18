@@ -3,27 +3,41 @@ using System.Collections;
 
 public abstract class TerrainTool : MonoBehaviour {
 
-    public GameObject cursor;
     protected TerrainEditor mTEditor;
+    protected Terrain mTargetTerrain;
+    protected RaycastHit mHit;
 
 	// Use this for initialization
-	void Start () {
+	protected void Initialize () {
         mTEditor = gameObject.GetComponent<TerrainEditor>();
-        cursor = (GameObject)Instantiate(cursor, new Vector3(0, 0, 0), Quaternion.identity);
 	}
 	
 	// Update is called once per frame
-	void FixedUpdate () {
-        RaycastHit hit;
-        Physics.Raycast(transform.position, transform.forward, out hit, 100);
-        if (hit.collider != null) {
-            Terrain hitTerrain = hit.collider.gameObject.GetComponent<Terrain>();
+	protected void FixedUpdate () {
+        Physics.Raycast(transform.position, transform.forward, out mHit, 100);
+        if (mHit.collider != null) {
+            Terrain hitTerrain = mHit.collider.gameObject.GetComponent<Terrain>();
             if (hitTerrain != null) {
-
+                mTargetTerrain = hitTerrain;
+                mTEditor.getCursor().transform.position = new Vector3(mHit.point.x, mHit.point.y + 10f, mHit.point.z);
+                mTEditor.getCursor().GetComponent<Projector>().orthographicSize = (mTEditor.getBrushSize() / 2) * hitTerrain.terrainData.heightmapScale.x;
             }
         }
-
 	}
+
+    protected TerrainEditor getEditor() {
+        return mTEditor;
+    }
+
+    public Terrain getHitTerrain() {
+        return mTargetTerrain;
+    }
+
+    public RaycastHit getHit() {
+        return mHit;
+    }
+
+    public abstract void ModifyTerrain();
 
 
 }
