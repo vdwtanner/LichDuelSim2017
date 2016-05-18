@@ -65,6 +65,9 @@ public class TerrainEditor : MonoBehaviour {
         bool smoothIn = Input.GetKeyUp(KeyCode.C);
         bool leftMouseClick = Input.GetMouseButton(0);
 
+        //TODO make better button
+        Controller controller = GetComponent<Controller>();
+
         if (addremoveIn) {
             mActiveTool = mAddRemoveTool;
         }
@@ -75,13 +78,13 @@ public class TerrainEditor : MonoBehaviour {
             mActiveTool = mSmoothTool;
         }
 
-        if (leftMouseClick && (mLastBrushX != mActiveTool.getHit().point.x || mLastBrushY != mActiveTool.getHit().point.y) && mTimer == 0.0f) {
+        if ((controller.getButtonPressed("trigger") || leftMouseClick) && (mLastBrushX != mActiveTool.getHit().point.x || mLastBrushY != mActiveTool.getHit().point.y) && mTimer == 0.0f) {
             mActiveTool.ModifyTerrain();
             mLODsdone = false;
             mTimer = timeBetweenBrush;
         }
 
-        if (!mLODsdone && !leftMouseClick) {
+        if (!mLODsdone && !leftMouseClick && ! controller.getButtonPressed("trigger")) {
             mActiveTool.getHitTerrain().ApplyDelayedHeightmapModification();
             mLODsdone = true;
         }
