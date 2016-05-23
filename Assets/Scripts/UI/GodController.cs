@@ -5,6 +5,7 @@ public class GodController : MonoBehaviour {
 
     Controller controller;
     GameObject hmd;
+    Terrain terrain;
 
     //Teleporting
     public Color teleportRayColor;
@@ -15,6 +16,9 @@ public class GodController : MonoBehaviour {
     public GameObject teleportationChargeEffect;
     //Teleport Charge Effect particle system
     private ParticleSystem tce;
+    private float terrainHeight;
+
+    public GameObject marker;
 
     //Grabbing
     public GameObject objectToGrab {get; set;}
@@ -42,6 +46,8 @@ public class GodController : MonoBehaviour {
         pe = go.GetComponent<ParticleSystem>();
         pe.Stop();
         pe.transform.parent = transform;
+        terrain = GameObject.FindGameObjectWithTag("Terrain").GetComponent<Terrain>();
+        terrainHeight = terrain.transform.position.y;
     }
 	
 	// Update is called once per frame
@@ -88,6 +94,9 @@ public class GodController : MonoBehaviour {
             Debug.Log(transform.name + " controller stopped particle emmission.");
             iOwnPS = false;
             Vector3 pos = ps.transform.position;
+            pos.y = terrain.SampleHeight(pos) + terrainHeight;
+            Instantiate(marker).transform.position = pos;
+            pos.y = (terrain.SampleHeight(pos) + terrainHeight) - Config.HMDStadningHeight/2.0f + Config.godTeleportationHeightOffset;
             Vector3 offset = hmd.transform.localPosition;
             offset.y = 0;
             pos -= offset * transform.parent.localScale.x;
