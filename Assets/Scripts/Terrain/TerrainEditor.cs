@@ -43,9 +43,12 @@ public class TerrainEditor : MonoBehaviour {
         mCursorInstance = (GameObject)Instantiate(brushCursorPrefab, new Vector3(0.0f, 0.0f, 0.0f), Quaternion.Euler(90, 0, 0));
 
         // add all tool scripts to the object we're on
-        mAddRemoveTool = gameObject.AddComponent<AddRemoveHeightTool>();
-        mPaintHeightTool = gameObject.AddComponent<PaintHeightTool>();
-        mSmoothTool = gameObject.AddComponent<SmoothHeightTool>();
+        mAddRemoveTool = new AddRemoveHeightTool();
+        mAddRemoveTool.Initialize(this);
+        mPaintHeightTool = new PaintHeightTool();
+        mPaintHeightTool.Initialize(this);
+        mSmoothTool = new SmoothHeightTool();
+        mSmoothTool.Initialize(this);
         mActiveTool = mAddRemoveTool;
         mTimer = timeBetweenBrush;
 
@@ -67,6 +70,7 @@ public class TerrainEditor : MonoBehaviour {
 
         //TODO make better button
         Controller controller = GetComponent<Controller>();
+        bool controllerTriggered = (controller == null) ? false : controller.getButtonPressed("trigger");
 
         if (addremoveIn) {
             mActiveTool = mAddRemoveTool;
@@ -77,18 +81,23 @@ public class TerrainEditor : MonoBehaviour {
         if (smoothIn) {
             mActiveTool = mSmoothTool;
         }
-
-        if ((controller.getButtonPressed("trigger") || leftMouseClick) && (mLastBrushX != mActiveTool.getHit().point.x || mLastBrushY != mActiveTool.getHit().point.y) && mTimer == 0.0f) {
+        if ((controllerTriggered || leftMouseClick) && (mLastBrushX != mActiveTool.getHit().point.x || mLastBrushY != mActiveTool.getHit().point.y) && mTimer == 0.0f) {
             mActiveTool.ModifyTerrain();
             mLODsdone = false;
             mTimer = timeBetweenBrush;
         }
+        mLastBrushX = mActiveTool.getHit().point.x;
+        mLastBrushY = mActiveTool.getHit().point.y;
 
-        if (!mLODsdone && !leftMouseClick && ! controller.getButtonPressed("trigger")) {
+        if (!mLODsdone && !leftMouseClick && !controllerTriggered) {
             mActiveTool.getHitTerrain().ApplyDelayedHeightmapModification();
             mLODsdone = true;
         }
 	}
+
+    void FixedUpdate() {
+        mActiveTool.FixedUpdate();
+    }
 
     public GameObject getCursor() {
         return mCursorInstance;
@@ -115,8 +124,8 @@ public class TerrainEditor : MonoBehaviour {
         mBrushTexture = tCopy;
     }
 
-    public float PixelToGrayScale(Color color) {
-        return ((color.r + color.g + color.b) / 3) * color.a;
+    public float PixelToGrayScale(Color32 color) {
+        return (((color.r + color.g + color.b) / 3) * (color.a/255.0f)) / 255.0f;
     }
 
 }
