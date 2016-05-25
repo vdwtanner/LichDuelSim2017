@@ -11,11 +11,11 @@ public class FreeCamera : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        Cursor.visible = false;
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
+        Cursor.visible = false;
         // TRANSLATION
         Vector3 trans = new Vector3();
         trans.x = Input.GetAxis("Horizontal");

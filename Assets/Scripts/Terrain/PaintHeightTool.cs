@@ -25,6 +25,10 @@ public class PaintHeightTool : TerrainTool {
             Debug.Log("PaintHeightTool::ModifyTerrain sample height was not set");
             return;
         }
+        if (getHit().collider == null)
+            return;
+        if (getHit().collider.gameObject.GetComponent<Terrain>() == null)
+            return;
 
         // get brush texture
         Texture2D tex2D = getEditor().getBrushTexture();
@@ -51,24 +55,20 @@ public class PaintHeightTool : TerrainTool {
         float[,] heights = getHitTerrain().terrainData.GetHeights(heightmapOffsetX, heightmapOffsetY, width, height);
         Color32[] pixels = tex2D.GetPixels32();
         int texWidth = tex2D.width;
-        TerrainEditor editor = getEditor();
-        float brushOpacity = editor.getBrushOpacity();
+        float brushOpacity = getEditor().getBrushOpacity();
 
         for (int i = imgOffsetX; i < width; i++) {
             for (int j = imgOffsetY; j < height; j++) {
-                // logic here is that the pixels are 0 to 1 in value, but so are the heightmap points.
-                // we need a divisor apart from opacity to weaken the brush effects to a managable level
                 // for some reason height and width are switched in the array returned by getHeights
-                // TODO replace getpixel with getpixels32 for optimization
                 int x = i - imgOffsetX;
                 int y = j - imgOffsetY;
                 if (heights[y, x] < mSampleHeight) {
-                    heights[y, x] += (editor.PixelToGrayScale(pixels[i * texWidth + j]) / 100) * brushOpacity;
+                    heights[y, x] += ((pixels[i * texWidth + j].a / 255.0f) / 100) * brushOpacity;
                     if (heights[y, x] > mSampleHeight) {
                         heights[y, x] = mSampleHeight;
                     }
                 } else if (heights[y, x] > mSampleHeight) {
-                    heights[y, x] -= (editor.PixelToGrayScale(pixels[i * texWidth + j]) / 100) * brushOpacity;
+                    heights[y, x] -= ((pixels[i * texWidth + j].a / 255.0f) / 100) * brushOpacity;
                     if (heights[y, x] < mSampleHeight) {
                         heights[y, x] = mSampleHeight;
                     }

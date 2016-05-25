@@ -65,7 +65,7 @@ public class TerrainEditor : MonoBehaviour {
 
         bool addremoveIn = Input.GetKeyUp(KeyCode.Z);
         bool paintHeightIn = Input.GetKeyUp(KeyCode.X);
-        bool smoothIn = Input.GetKeyUp(KeyCode.C);
+        bool smoothIn = Input.GetKeyUp(KeyCode.V);
         bool leftMouseClick = Input.GetMouseButton(0);
         bool rightMouseClick = Input.GetMouseButton(1);
 
@@ -128,11 +128,21 @@ public class TerrainEditor : MonoBehaviour {
         Texture2D tex = mCursorInstance.GetComponent<Projector>().material.GetTexture("_ShadowTex") as Texture2D;
         Texture2D tCopy = Instantiate(tex);
         TextureScale.Point(tCopy, size, size);
+        Color32[] pixels = tCopy.GetPixels32();
+        int pWidth = tCopy.width;
+        int pHeight = tCopy.height;
+        for (int i = 0; i < pWidth; i++) {
+            for (int j = 0; j < pHeight; j++) {
+                pixels[i * pWidth + j] = PixelToGrayScale(pixels[i * pWidth + j]);
+            }
+        }
+        tCopy.SetPixels32(pixels);
         mBrushTexture = tCopy;
     }
 
-    public float PixelToGrayScale(Color32 color) {
-        return (((color.r + color.g + color.b) / 3) * (color.a/255.0f)) / 255.0f;
+    public Color32 PixelToGrayScale(Color32 color) {
+        byte gray = (byte)(((color.r + color.g + color.b) / 3) * (color.a / 255.0f));
+        return new Color32(gray, gray, gray, gray);
     }
 
 }
