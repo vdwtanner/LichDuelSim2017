@@ -67,6 +67,7 @@ public class TerrainEditor : MonoBehaviour {
         bool paintHeightIn = Input.GetKeyUp(KeyCode.X);
         bool smoothIn = Input.GetKeyUp(KeyCode.C);
         bool leftMouseClick = Input.GetMouseButton(0);
+        bool rightMouseClick = Input.GetMouseButton(1);
 
         //TODO make better button
         Controller controller = GetComponent<Controller>();
@@ -83,6 +84,12 @@ public class TerrainEditor : MonoBehaviour {
         }
         if ((controllerTriggered || leftMouseClick) && (mLastBrushX != mActiveTool.getHit().point.x || mLastBrushY != mActiveTool.getHit().point.y) && mTimer == 0.0f) {
             mActiveTool.ModifyTerrain();
+            mLODsdone = false;
+            mTimer = timeBetweenBrush;
+        }
+        if ((rightMouseClick) && mTimer == 0.0f) {
+            mActiveTool.BrushAltFire();
+            Debug.Log("Alt Fire!");
             mLODsdone = false;
             mTimer = timeBetweenBrush;
         }

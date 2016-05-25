@@ -37,6 +37,7 @@ public abstract class TerrainTool{
     }
 
     public abstract void ModifyTerrain();
+    public abstract void BrushAltFire();
 
 
 }

@@ -1,7 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class AddRemoveHeightTool : TerrainTool {
+
+    public override void BrushAltFire() {
+        Debug.Log("AddRemoveHeightTool::BrushAltFire does nothing");
+    }
 
     public override void ModifyTerrain(){
         if (getHit().collider == null)
@@ -33,6 +38,10 @@ public class AddRemoveHeightTool : TerrainTool {
 
         float[,] heights = getHitTerrain().terrainData.GetHeights(heightmapOffsetX, heightmapOffsetY, width, height);
         Color32[] pixels = tex2D.GetPixels32();
+        int texWidth = tex2D.width;
+        TerrainEditor editor = getEditor();
+        float brushOpacity = editor.getBrushOpacity();
+
         for (int i = imgOffsetX; i < width; i++) {
             for (int j = imgOffsetY; j < height; j++) {
                 // logic here is that the pixels are 0 to 1 in value, but so are the heightmap points.
@@ -41,7 +50,7 @@ public class AddRemoveHeightTool : TerrainTool {
                 // TODO replace getpixel with getpixels32 for optimization
                 int x = i - imgOffsetX;
                 int y = j - imgOffsetY;
-                heights[y, x] += (getEditor().PixelToGrayScale(pixels[i*tex2D.width + j]) / 100) * getEditor().getBrushOpacity();
+                heights[y, x] += (editor.PixelToGrayScale(pixels[i*texWidth + j]) / 100) * brushOpacity;
             }
         }
 
