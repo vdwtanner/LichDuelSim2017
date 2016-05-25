@@ -5,18 +5,19 @@ public class GodController : MonoBehaviour {
 
     Controller controller;
     GameObject hmd;
-    Terrain terrain;
+    //Terrain terrain;
+    VRHelper cameraRig;
 
     //Teleporting
     public Color teleportRayColor;
-    public float teleportDistance = 200;
+    public float teleportDistance = 800;
     public ParticleSystem ps;
     private bool iOwnPS = false;
     public LayerMask teleportMask;
     public GameObject teleportationChargeEffect;
     //Teleport Charge Effect particle system
     private ParticleSystem tce;
-    private float terrainHeight;
+    //private float terrainHeight;
 
     public GameObject marker;
 
@@ -46,8 +47,8 @@ public class GodController : MonoBehaviour {
         pe = go.GetComponent<ParticleSystem>();
         pe.Stop();
         pe.transform.parent = transform;
-        terrain = GameObject.FindGameObjectWithTag("Terrain").GetComponent<Terrain>();
-        terrainHeight = terrain.transform.position.y;
+        
+        cameraRig = transform.parent.GetComponent<VRHelper>();
     }
 	
 	// Update is called once per frame
@@ -58,12 +59,18 @@ public class GodController : MonoBehaviour {
         calibrationManager();
 	}
 
+    void OnTriggerEnter(Collider other) {
+        if(other.GetComponent<Terrain>() != null) {
+            controller.hapticPulse(2200);
+        }
+    }
+
     void teleportationManager() {
         if (controller.getButtonPressed("touchpad")) {
             Vector3 forward = transform.TransformDirection(Vector3.forward) * teleportDistance;
             Debug.DrawRay(transform.position, forward * 200, Color.green);
         }
-        if (controller.getButtonPressed("touchpad") && (!ps.emission.enabled || tce.isPlaying)) {
+        if (controller.getButtonPressed("touchpad") && (!cameraRig.isTeleporting || iOwnPS)) {
             //tce.transform.position = transform.position;
             if (!tce.isPlaying) {
                 tce.Play();
@@ -75,10 +82,11 @@ public class GodController : MonoBehaviour {
             Ray ray = new Ray(transform.position, forward);
             if (Physics.Raycast(ray, out hit, teleportDistance, teleportMask)) {
                 ps.transform.position = hit.point;
-                if (!ps.isPlaying) {
+                if (!cameraRig.isTeleporting) {
                     ParticleSystem.EmissionModule em = ps.emission;
                     em.enabled = true;
                     ps.Play();
+                    cameraRig.isTeleporting = true;
                     Debug.Log(transform.name + " controller began teleport particle emmission.");
                 }
 
@@ -86,17 +94,18 @@ public class GodController : MonoBehaviour {
                 //ps.Play();
                 iOwnPS = true;
             }
-        } else if (controller.getButtonUp("touchpad") && tce.isPlaying) {
+        } else if (controller.getButtonUp("touchpad") && iOwnPS) {
             ps.Stop();
+            cameraRig.isTeleporting = false;
             ParticleSystem.EmissionModule em = ps.emission;
             em.enabled = false;
             tce.Stop();
             Debug.Log(transform.name + " controller stopped particle emmission.");
             iOwnPS = false;
             Vector3 pos = ps.transform.position;
-            pos.y = terrain.SampleHeight(pos) + terrainHeight;
+            pos.y = cameraRig.terrain.SampleHeight(pos) + cameraRig.terrainHeight;
             Instantiate(marker).transform.position = pos;
-            pos.y = (terrain.SampleHeight(pos) + terrainHeight) - Config.HMDStadningHeight/2.0f + Config.godTeleportationHeightOffset;
+            pos.y = (cameraRig.terrain.SampleHeight(pos) + cameraRig.terrainHeight) - Config.HMDStadningHeight/2.0f + Config.godTeleportationHeightOffset;
             Vector3 offset = hmd.transform.localPosition;
             offset.y = 0;
             pos -= offset * transform.parent.localScale.x;
@@ -152,7 +161,13 @@ public class GodController : MonoBehaviour {
         transform.parent.localScale = playAreaScale;
 
         //This will need to be changed when we finally have real models.
-        transform.parent.parent.position = p.transform.position;
+        //transform.parent.parent.position = p.transform.position;
+        transform.parent.parent = objectToPossess.transform;    //change parent to be the monster.
+        transform.parent.localPosition = Vector3.zero;
+        transform.parent.localEulerAngles = Vector3.zero;
+        Possessed possessed = p.gameObject.AddComponent<Possessed>();
+        possessed.setHeadTransform(cameraRig.transform.FindChild("Camera (eye)").transform);
+        cameraRig.possessionBody = p.gameObject;
         transform.parent.BroadcastMessage("switchControl", "possession");
     }
 
