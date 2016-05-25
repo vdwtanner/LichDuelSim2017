@@ -13,10 +13,19 @@ public class Controller : MonoBehaviour {
     private SteamVR_TrackedObject trackedObj;
     private SteamVR_Controller.Device controller { get { return SteamVR_Controller.Input((int)trackedObj.index); } }
 
+    private float triggerPressure;
+    private Vector2 touchpadAxis;
+
+
     // Use this for initialization
     void Start () {
         trackedObj = GetComponent<SteamVR_TrackedObject>();
 	}
+
+    void FixedUpdate() {
+        triggerPressure = controller.GetAxis(triggerButton).x;
+        touchpadAxis = controller.GetAxis();
+    }
 
     public bool getButtonDown(string buttonName) {
         switch (buttonName) {
@@ -64,6 +73,14 @@ public class Controller : MonoBehaviour {
                 Debug.LogWarning("Invalid button requested: " + buttonName);
                 return false;
         }
+    }
+
+    public float getTriggerPressure() {
+        return triggerPressure;
+    }
+
+    public Vector2 getTouchpadAxis() {
+        return touchpadAxis;
     }
 
     public void hapticPulse(ushort duration) {
