@@ -44,13 +44,10 @@ public class AddRemoveHeightTool : TerrainTool {
 
         for (int i = imgOffsetX; i < width; i++) {
             for (int j = imgOffsetY; j < height; j++) {
-                // logic here is that the pixels are 0 to 1 in value, but so are the heightmap points.
-                // we need a divisor apart from opacity to weaken the brush effects to a managable level
                 // for some reason height and width are switched in the array returned by getHeights
-                // TODO replace getpixel with getpixels32 for optimization
                 int x = i - imgOffsetX;
                 int y = j - imgOffsetY;
-                heights[y, x] += (editor.PixelToGrayScale(pixels[i*texWidth + j]) / 100) * brushOpacity;
+                heights[y, x] += ((pixels[i*texWidth + j].a / 255.0f) / 100) * brushOpacity;
             }
         }
 
