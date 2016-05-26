@@ -12,21 +12,67 @@ public class Controller : MonoBehaviour {
 
     private SteamVR_TrackedObject trackedObj;
     private SteamVR_Controller.Device controller { get { return SteamVR_Controller.Input((int)trackedObj.index); } }
+    private SteamVR_RenderModel renderModel;
 
-    private float triggerPressure;
+    private Vector2 triggerAxis;
     private Vector2 touchpadAxis;
+    private Vector2 scrollWheelAxis = Vector2.zero;
+    private bool thumbOnTouchpad = false;
+
+    private Transform scrollwheel;
+    private bool scrollWheelShown = false;
+    private float scrollWheelStartRotation = 0;
+    private bool setStartRotation = false;
 
 
     // Use this for initialization
     void Start () {
         trackedObj = GetComponent<SteamVR_TrackedObject>();
+        renderModel = transform.GetChild(0).GetComponent<SteamVR_RenderModel>();//This should be the Model GameObject
+        
 	}
 
     void FixedUpdate() {
-        triggerPressure = controller.GetAxis(triggerButton).x;
+        triggerAxis = controller.GetAxis(triggerButton);
+        thumbOnTouchpad = controller.GetTouch(touchpadButton);
         touchpadAxis = controller.GetAxis();
+        scrollWheelManager();        
     }
 
+    void scrollWheelManager() {
+        if (scrollWheelShown) {
+            if (scrollwheel != null) {
+                if (getTouchDown("touchpad") || setStartRotation) {
+                    setStartRotation = !setStartRotation;
+                    scrollWheelStartRotation = scrollwheel.localEulerAngles.x;
+                    if (scrollWheelStartRotation > 180) {
+                        scrollWheelStartRotation -= 360;
+                    }
+                }
+                if(scrollWheelStartRotation != 0 && getTouchUp("touchpad")){
+                    scrollWheelStartRotation = 0;
+                } else {
+                    scrollWheelAxis.x = scrollwheel.localEulerAngles.x;
+                    if (scrollWheelAxis.x > 180) {
+                        scrollWheelAxis.x -= 360;
+                    }
+                    scrollWheelAxis.x -= scrollWheelStartRotation;
+                }
+                
+            } else {
+                scrollwheel = transform.GetChild(0).FindChild("scroll_wheel");
+                scrollWheelAxis.x = 0;
+            }
+        } else {
+            scrollWheelAxis.x = 0;
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="buttonName">Can be grip, trigger, touchpad, or menu</param>
+    /// <returns></returns>
     public bool getButtonDown(string buttonName) {
         switch (buttonName) {
             case "grip":
@@ -43,6 +89,11 @@ public class Controller : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="buttonName">Can be grip, trigger, touchpad, or menu</param>
+    /// <returns></returns>
     public bool getButtonUp(string buttonName) {
         switch (buttonName) {
             case "grip":
@@ -59,6 +110,11 @@ public class Controller : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="buttonName">Can be grip, trigger, touchpad, or menu</param>
+    /// <returns></returns>
     public bool getButtonPressed(string buttonName) {
         switch (buttonName) {
             case "grip":
@@ -75,11 +131,44 @@ public class Controller : MonoBehaviour {
         }
     }
 
-    public float getTriggerPressure() {
-        return triggerPressure;
+    public bool getTouchDown(string name) {
+        switch (name) {
+            case "touchpad":
+                return controller.GetTouchDown(touchpadButton); ;
+        }
+        return false;
     }
 
-    public Vector2 getTouchpadAxis() {
+    public bool getTouch(string name) {
+        switch (name) {
+            case "touchpad":
+                return controller.GetTouchDown(touchpadButton); ;
+        }
+        return false;
+    }
+
+    public bool getTouchUp(string name) {
+        switch (name) {
+            case "touchpad":
+                return controller.GetTouchUp(touchpadButton);
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Axis are not reset to zero until the player takes their finger off of the device.
+    /// </summary>
+    /// <param name="axisName">Can be trigger, touchpad, or scrollwheel</param>
+    /// <returns></returns>
+    public Vector2 getAxis(string axisName) {
+        switch (axisName) {
+            case "trigger":
+                return triggerAxis; ;
+            case "touchpad":
+                return touchpadAxis;
+            case "scrollWheel":
+                return scrollWheelAxis;
+        }
         return touchpadAxis;
     }
 
@@ -95,5 +184,10 @@ public class Controller : MonoBehaviour {
     public Vector3 getAngularVelocity() {
         Transform origin = trackedObj.origin ? trackedObj.origin : trackedObj.transform.parent;
         return origin.TransformVector(controller.angularVelocity);
+    }
+
+    public void showScrollWheel(bool show) {
+        renderModel.controllerModeState.bScrollWheelVisible = show;
+        scrollWheelShown = show;
     }
 }

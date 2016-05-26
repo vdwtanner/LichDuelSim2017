@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 /*
     Attach this script to a camera or gameobject to give it terrain editing tools at runtime.
 */
-public class TerrainEditor : MonoBehaviour {
+public class TerrainEditor : MonoBehaviour, SwipeListener {
 
     [Header("Brush Settings")]
     [Range(0, 100)] public int size = 10;
@@ -24,6 +25,8 @@ public class TerrainEditor : MonoBehaviour {
     private AddRemoveHeightTool mAddRemoveTool;
     private PaintHeightTool mPaintHeightTool;
     private SmoothHeightTool mSmoothTool;
+    private TerrainTool[] mTools;
+    private int mToolIndex;
 
     private TerrainTool mActiveTool;
 
@@ -36,6 +39,10 @@ public class TerrainEditor : MonoBehaviour {
 
     private float mLastBrushX;
     private float mLastBrushY;
+
+    private int mSizeBeforeResize = -1;//invalid state
+
+    private Controller controller;
 
 	// Use this for initialization
 	void Start () {
@@ -50,9 +57,17 @@ public class TerrainEditor : MonoBehaviour {
         mSmoothTool = new SmoothHeightTool();
         mSmoothTool.Initialize(this);
         mActiveTool = mAddRemoveTool;
+        //mActiveTool = mSmoothTool;
         mTimer = timeBetweenBrush;
-
+        controller = GetComponent<Controller>();
+        controller.showScrollWheel(true);
         mLODsdone = true;
+        //Allows for quick tool swap
+        mTools = new TerrainTool[3];
+        mTools[0] = mAddRemoveTool;
+        mTools[1] = mPaintHeightTool;
+        mTools[2] = mSmoothTool;
+        mToolIndex = 0;
 
         setBrushSize(size);
 	}
@@ -70,24 +85,28 @@ public class TerrainEditor : MonoBehaviour {
         bool rightMouseClick = Input.GetMouseButton(1);
 
         //TODO make better button
-        Controller controller = GetComponent<Controller>();
-        bool controllerTriggered = (controller == null) ? false : controller.getButtonPressed("trigger");
+        
+        bool controllerTriggerPressed = (controller == null) ? false : controller.getAxis("trigger").x>0.025f;
+        bool controllerGripsPressed = (controller == null) ? false : controller.getButtonPressed("grip");
 
         if (addremoveIn) {
             mActiveTool = mAddRemoveTool;
+            mToolIndex = 0;
         }
         if (paintHeightIn) {
             mActiveTool = mPaintHeightTool;
+            mToolIndex = 1;
         }
         if (smoothIn) {
             mActiveTool = mSmoothTool;
+            mToolIndex = 2;
         }
-        if ((controllerTriggered || leftMouseClick) && (mLastBrushX != mActiveTool.getHit().point.x || mLastBrushY != mActiveTool.getHit().point.y) && mTimer == 0.0f) {
+        if ((controllerTriggerPressed || leftMouseClick) && (mLastBrushX != mActiveTool.getHit().point.x || mLastBrushY != mActiveTool.getHit().point.y) && mTimer == 0.0f) {
             mActiveTool.ModifyTerrain();
             mLODsdone = false;
             mTimer = timeBetweenBrush;
         }
-        if ((rightMouseClick) && mTimer == 0.0f) {
+        if ((rightMouseClick || controllerGripsPressed) && mTimer == 0.0f) {
             mActiveTool.BrushAltFire();
             Debug.Log("Alt Fire!");
             mLODsdone = false;
@@ -96,7 +115,7 @@ public class TerrainEditor : MonoBehaviour {
         mLastBrushX = mActiveTool.getHit().point.x;
         mLastBrushY = mActiveTool.getHit().point.y;
 
-        if (!mLODsdone && !leftMouseClick && !controllerTriggered) {
+        if (!mLODsdone && !leftMouseClick && !controllerTriggerPressed) {
             mActiveTool.getHitTerrain().ApplyDelayedHeightmapModification();
             mLODsdone = true;
         }
@@ -104,6 +123,19 @@ public class TerrainEditor : MonoBehaviour {
 
     void FixedUpdate() {
         mActiveTool.FixedUpdate();
+        if(controller != null) {
+            float sizeChange = controller.getAxis("scrollWheel").x / 2.0f;
+
+            if (sizeChange != 0) {
+                if (mSizeBeforeResize == -1) {
+                    mSizeBeforeResize = getBrushSize();
+                }
+                setBrushSize(mSizeBeforeResize + Mathf.RoundToInt(sizeChange));
+            } else if (mSizeBeforeResize > -1) {
+                mSizeBeforeResize = -1;
+            }
+        }
+        
     }
 
     public GameObject getCursor() {
@@ -115,6 +147,10 @@ public class TerrainEditor : MonoBehaviour {
     }
 
     public float getBrushOpacity() {
+        return opacity * ((controller == null) ? 1.0f : controller.getAxis("trigger").x);
+    }
+
+    public float getAltBrushOpacity() {
         return opacity;
     }
 
@@ -124,6 +160,11 @@ public class TerrainEditor : MonoBehaviour {
 
     public void setBrushSize(int size) {
         // update the brush texture
+        Debug.Log("New Size = " + size);
+        if (size > 100)
+            size = 100;
+        if (size < 1)
+            size = 1;
         this.size = size;
         Texture2D tex = mCursorInstance.GetComponent<Projector>().material.GetTexture("_ShadowTex") as Texture2D;
         Texture2D tCopy = Instantiate(tex);
@@ -145,4 +186,22 @@ public class TerrainEditor : MonoBehaviour {
         return new Color32(gray, gray, gray, gray);
     }
 
+    public void OnSwipeRight(float velocity) {
+        mToolIndex = (mToolIndex + 1) % mTools.Length;
+        mActiveTool = mTools[mToolIndex];
+        Debug.Log("Current tool: " + mActiveTool.GetType());//Need to create UI to show these things
+    }
+
+    public void OnSwipeLeft(float velocity) {
+        mToolIndex = (mToolIndex - 1) % mTools.Length;
+        if (mToolIndex < 0) {
+            mToolIndex = mTools.Length + mToolIndex;
+        }
+        mActiveTool = mTools[mToolIndex];
+        Debug.Log("Current tool: " + mActiveTool.GetType());//Need to create UI to show these things
+    }
+
+    public void OnSwipeUp(float velocity) {}
+
+    public void OnSwipeDown(float velocity) {}
 }
