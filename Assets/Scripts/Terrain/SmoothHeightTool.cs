@@ -1,10 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class SmoothHeightTool : TerrainTool {
 
+    public override void OnSelection() {
+        hController.enableLaserPointer(false);
+    }
+
     public override void BrushAltFire() {
         Debug.Log("SmoothHeightTool::BrushAltFire does nothing");
+    }
+
+    public override void BrushAltFireUp() {
+        Debug.Log("SmoothHeightTool::BrushAltFireUp does nothing");
     }
 
     public override void ModifyTerrain() {

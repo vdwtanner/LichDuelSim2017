@@ -33,7 +33,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
     private GameObject mCursorInstance;
     private Texture2D mBrushTexture;
 
-    private bool mLODsdone;
+    private bool mLODsdone=true;
 
     private float mTimer;
 
@@ -88,19 +88,29 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         
         bool controllerTriggerPressed = (controller == null) ? false : controller.getAxis("trigger").x>0.025f;
         bool controllerGripsPressed = (controller == null) ? false : controller.getButtonPressed("grip");
+        bool controllerGripsUp = (controller == null) ? false : controller.getButtonUp("grip");
 
         if (addremoveIn) {
             mActiveTool = mAddRemoveTool;
             mToolIndex = 0;
+            mTools[mToolIndex].OnSelection();
         }
         if (paintHeightIn) {
             mActiveTool = mPaintHeightTool;
             mToolIndex = 1;
+            mTools[mToolIndex].OnSelection();
         }
         if (smoothIn) {
             mActiveTool = mSmoothTool;
             mToolIndex = 2;
+            mTools[mToolIndex].OnSelection();
         }
+
+        if(controllerGripsUp || Input.GetMouseButtonUp(1)) {
+            //This is the same as mActiveTool, but is a step towards removing that extra variable and making it more scalable
+            mTools[mToolIndex].BrushAltFireUp();
+        }
+
         if ((controllerTriggerPressed || leftMouseClick) && (mLastBrushX != mActiveTool.getHit().point.x || mLastBrushY != mActiveTool.getHit().point.y) && mTimer == 0.0f) {
             mActiveTool.ModifyTerrain();
             mLODsdone = false;
@@ -115,7 +125,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         mLastBrushX = mActiveTool.getHit().point.x;
         mLastBrushY = mActiveTool.getHit().point.y;
 
-        if (!mLODsdone && !leftMouseClick && !controllerTriggerPressed) {
+        if (!mLODsdone && !leftMouseClick && !controllerTriggerPressed && mActiveTool.getHitTerrain() != null) {
             mActiveTool.getHitTerrain().ApplyDelayedHeightmapModification();
             mLODsdone = true;
         }
@@ -160,7 +170,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
 
     public void setBrushSize(int size) {
         // update the brush texture
-        Debug.Log("New Size = " + size);
+        //Debug.Log("New Size = " + size);
         if (size > 100)
             size = 100;
         if (size < 1)
@@ -189,6 +199,8 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
     public void OnSwipeRight(float velocity) {
         mToolIndex = (mToolIndex + 1) % mTools.Length;
         mActiveTool = mTools[mToolIndex];
+        mTools[mToolIndex].OnSelection();
+        controller.showText(mActiveTool.GetType().ToString(), "base", 2.0f);
         Debug.Log("Current tool: " + mActiveTool.GetType());//Need to create UI to show these things
     }
 
@@ -198,10 +210,13 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
             mToolIndex = mTools.Length + mToolIndex;
         }
         mActiveTool = mTools[mToolIndex];
+        mTools[mToolIndex].OnSelection();
+        controller.showText(mActiveTool.GetType().ToString(), "base", 2.0f);
         Debug.Log("Current tool: " + mActiveTool.GetType());//Need to create UI to show these things
     }
 
+    //Don't use these since it will override the size changer
     public void OnSwipeUp(float velocity) {}
-
+    //Don't use these since it will override the size changer
     public void OnSwipeDown(float velocity) {}
 }

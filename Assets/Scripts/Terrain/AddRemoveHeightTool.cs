@@ -4,6 +4,10 @@ using System;
 
 public class AddRemoveHeightTool : TerrainTool {
 
+    public override void OnSelection() {
+        hController.enableLaserPointer(false);
+    }
+
     public override void BrushAltFire() {
         if (getHit().collider == null)
             return;
@@ -50,6 +54,10 @@ public class AddRemoveHeightTool : TerrainTool {
         }
 
         getHitTerrain().terrainData.SetHeightsDelayLOD(heightmapOffsetX, heightmapOffsetY, heights);
+    }
+
+    public override void BrushAltFireUp() {
+        Debug.Log("AddRemoveHeightTool::BrushAltFireUp does nothing");
     }
 
     public override void ModifyTerrain(){

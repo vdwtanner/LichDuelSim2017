@@ -1,23 +1,44 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class PaintHeightTool : TerrainTool {
 
     float mSampleHeight = -1;
 
+
+    public override void OnSelection() {
+        hController.enableLaserPointer(false);
+    }
+
     public override void BrushAltFire() {
+        if(hController != null && hController.getButtonDown("grip")) {
+            hController.enableLaserPointer(true);
+        }
         // sample height of terrain
         if (getHitTerrain() != null) {
             Vector3 heightmapScale = getHitTerrain().terrainData.heightmapScale;
             int heightmapOffsetX = (int)((getHit().point.x - getHitTerrain().GetPosition().x) / heightmapScale.x);
             int heightmapOffsetY = (int)((getHit().point.z - getHitTerrain().GetPosition().z) / heightmapScale.z);
-
-            mSampleHeight = getHitTerrain().terrainData.GetHeights(heightmapOffsetX, heightmapOffsetY, 1, 1)[0, 0];
-            Debug.Log("Sample Height is" + mSampleHeight);
+            try {
+                mSampleHeight = getHitTerrain().terrainData.GetHeights(heightmapOffsetX, heightmapOffsetY, 1, 1)[0, 0];
+            }catch {
+                Debug.LogWarning("PaintHeightTool was checking outside the bounds again. It's such a naughty thing.");
+                if (hController != null) {
+                    hController.showText("Can only sample\nheight from the terrain", "base", 2.0f);
+                    
+                }
+            }
+           
+            Debug.Log("Sample Height is " + mSampleHeight);
         } else {
             Debug.Log("PaintHeightTool::BrushAltFire terrain is null");
             mSampleHeight = -1;
         }
+    }
+
+    public override void BrushAltFireUp() {
+        hController.enableLaserPointer(false);
     }
 
     public override void ModifyTerrain(){

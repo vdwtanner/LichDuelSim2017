@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class Controller : MonoBehaviour {
     private Valve.VR.EVRButtonId gripButton = Valve.VR.EVRButtonId.k_EButton_Grip;
@@ -24,19 +24,60 @@ public class Controller : MonoBehaviour {
     private float scrollWheelStartRotation = 0;
     private bool setStartRotation = false;
 
+    //Text areas
+    private Dictionary<string, float> textTimers;
+    private bool checkTextTimers = false;
+    private List<string> timerKeys;
+
+    //Laser
+    private SteamVR_LaserPointer laserPointer;
+    public Color laserPointerColor = Color.green;
+
+    //Happens before Start(), which is good for functions that want to tell the controller to show the mouse wheel in their start functions.
+    void Awake() {
+        trackedObj = GetComponent<SteamVR_TrackedObject>();
+        renderModel = transform.GetChild(0).GetComponent<SteamVR_RenderModel>();//This should be the Model GameObject
+        initTextTimers();
+        laserPointer = gameObject.AddComponent<SteamVR_LaserPointer>();
+        laserPointer.color = laserPointerColor;
+        laserPointer.showLaserOnStart = false;
+    }
 
     // Use this for initialization
     void Start () {
-        trackedObj = GetComponent<SteamVR_TrackedObject>();
-        renderModel = transform.GetChild(0).GetComponent<SteamVR_RenderModel>();//This should be the Model GameObject
-        
-	}
+
+    }
+
+    void initTextTimers() {
+        textTimers = new Dictionary<string, float>();
+        textTimers.Add("base", 0);
+        timerKeys = new List<string>(textTimers.Keys);
+    }
 
     void FixedUpdate() {
         triggerAxis = controller.GetAxis(triggerButton);
         thumbOnTouchpad = controller.GetTouch(touchpadButton);
         touchpadAxis = controller.GetAxis();
-        scrollWheelManager();        
+        scrollWheelManager();
+        if (checkTextTimers) {
+            textTimerManager();
+        }
+           
+    }
+
+    void textTimerManager() {
+        bool dirty = false;
+        foreach (string key in timerKeys) {
+            if(textTimers[key] > 0) {
+                textTimers[key] -= Time.fixedDeltaTime;
+                if(textTimers[key] > 0) {
+                    dirty = true;
+                } else {
+                    transform.GetChild(0).FindChild(key).FindChild("attach").FindChild("TextArea").GetComponent<Renderer>().enabled = false;
+                }
+            }
+        }
+        checkTextTimers = dirty;
     }
 
     void scrollWheelManager() {
@@ -186,8 +227,38 @@ public class Controller : MonoBehaviour {
         return origin.TransformVector(controller.angularVelocity);
     }
 
+    /// <summary>
+    /// Enable or disable the scroll wheel
+    /// </summary>
+    /// <param name="show"></param>
     public void showScrollWheel(bool show) {
         renderModel.controllerModeState.bScrollWheelVisible = show;
         scrollWheelShown = show;
+    }
+
+    /// <summary>
+    /// Show text at location for duration seconds. Returns false if the specified location isn't valid.
+    /// </summary>
+    /// <param name="location"></param>
+    /// <param name="duration"></param>
+    /// <returns></returns>
+    public bool showText(string text, string location, float duration) {
+        if (!textTimers.ContainsKey(location)) {
+            return false;
+        }
+        Transform textArea = transform.GetChild(0).FindChild(location).FindChild("attach").FindChild("TextArea");
+        textArea.GetComponent<TextMesh>().text = text;
+        textArea.GetComponent<Renderer>().enabled = true;
+        textTimers[location] = duration;
+        checkTextTimers = true;
+        return true;
+    }
+
+    /// <summary>
+    /// Turn the laserPointer on and off with this method.
+    /// </summary>
+    /// <param name="enabled"></param>
+    public void enableLaserPointer(bool enabled) {
+        laserPointer.pointer.GetComponent<Renderer>().enabled = enabled;
     }
 }

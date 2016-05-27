@@ -36,7 +36,7 @@ public class LevelEditorController : MonoBehaviour {
     void teleportationManager() {
         if (controller.getButtonPressed("touchpad")) {
             Vector3 forward = transform.TransformDirection(Vector3.forward) * teleportDistance;
-            Debug.DrawRay(transform.position, forward * 200, Color.green);
+            //Debug.DrawRay(transform.position, forward * 200, Color.green);
         }
         if (controller.getButtonPressed("touchpad") && (!cameraRig.isTeleporting || iOwnPS)) {
             //tce.transform.position = transform.position;
@@ -55,7 +55,7 @@ public class LevelEditorController : MonoBehaviour {
                     em.enabled = true;
                     ps.Play();
                     cameraRig.isTeleporting = true;
-                    Debug.Log(transform.name + " controller began teleport particle emmission.");
+                    //Debug.Log(transform.name + " controller began teleport particle emmission.");
                 }
 
                 //ps.Emit(1);
@@ -68,7 +68,7 @@ public class LevelEditorController : MonoBehaviour {
             ParticleSystem.EmissionModule em = ps.emission;
             em.enabled = false;
             //tce.Stop();
-            Debug.Log(transform.name + " controller stopped particle emmission.");
+            //Debug.Log(transform.name + " controller stopped particle emmission.");
             iOwnPS = false;
             Vector3 pos = ps.transform.position;
             pos.y = cameraRig.terrain.SampleHeight(pos) + cameraRig.terrainHeight;

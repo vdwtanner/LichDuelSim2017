@@ -6,10 +6,12 @@ public abstract class TerrainTool{
     protected TerrainEditor mTEditor;
     protected Terrain mTargetTerrain;
     protected RaycastHit mHit;
+    protected Controller hController;
 
 	// Use this for initialization
 	public void Initialize (TerrainEditor editor) {
         mTEditor = editor.gameObject.GetComponent<TerrainEditor>();
+        hController = editor.gameObject.GetComponent<Controller>();
 	}
 	
 	public void FixedUpdate () {
@@ -38,6 +40,10 @@ public abstract class TerrainTool{
 
     public abstract void ModifyTerrain();
     public abstract void BrushAltFire();
-
+    /// <summary>
+    /// This is called on the frame that the alt fire button is released
+    /// </summary>
+    public abstract void BrushAltFireUp();
+    public abstract void OnSelection();
 
 }

@@ -43,14 +43,14 @@ public class SwipeDetector : MonoBehaviour {
             // Record start time and position
             mStartPosition = controller.getAxis("touchpad");
             mSwipeStartTime = Time.time;
-            Debug.Log("Tracking Start");
+            //Debug.Log("Tracking Start");
         }
         // Touch up , possible chance for a swipe
         else if (controller.getTouchUp("touchpad")) {
             trackingSwipe = false;
             trackingSwipe = true;
             checkSwipe = true;
-            Debug.Log("Tracking Finish");
+            //Debug.Log("Tracking Finish");
         } else if (trackingSwipe) {
             endPosition = controller.getAxis("touchpad");
             //Debug.Log("swiping");
@@ -62,7 +62,7 @@ public class SwipeDetector : MonoBehaviour {
             Vector2 swipeVector = endPosition - mStartPosition;
 
             float velocity = swipeVector.magnitude / deltaTime;
-            Debug.Log(velocity);
+            //Debug.Log(velocity);
             if (velocity > mMinVelocity &&
                 swipeVector.magnitude > mMinSwipeDist) {
                 // if the swipe has enough velocity and enough distance
