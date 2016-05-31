@@ -60,7 +60,8 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         //mActiveTool = mSmoothTool;
         mTimer = timeBetweenBrush;
         controller = GetComponent<Controller>();
-        controller.showScrollWheel(true);
+        if(controller != null)
+            controller.showScrollWheel(true);
         mLODsdone = true;
         //Allows for quick tool swap
         mTools = new TerrainTool[3];
@@ -127,6 +128,9 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
 
         if (!mLODsdone && !leftMouseClick && !controllerTriggerPressed && mActiveTool.getHitTerrain() != null) {
             mActiveTool.getHitTerrain().ApplyDelayedHeightmapModification();
+            TerrainHexGrid grid = mActiveTool.getHitTerrain().gameObject.GetComponent<TerrainHexGrid>();
+            if (grid != null)
+                grid.TerrainModified();
             mLODsdone = true;
         }
 	}

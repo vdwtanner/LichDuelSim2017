@@ -8,7 +8,8 @@ public class PaintHeightTool : TerrainTool {
 
 
     public override void OnSelection() {
-        hController.enableLaserPointer(false);
+        if(hController != null)
+            hController.enableLaserPointer(false);
     }
 
     public override void BrushAltFire() {
@@ -38,7 +39,8 @@ public class PaintHeightTool : TerrainTool {
     }
 
     public override void BrushAltFireUp() {
-        hController.enableLaserPointer(false);
+        if(hController != null)
+            hController.enableLaserPointer(false);
     }
 
     public override void ModifyTerrain(){

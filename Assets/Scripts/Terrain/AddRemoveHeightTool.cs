@@ -5,7 +5,8 @@ using System;
 public class AddRemoveHeightTool : TerrainTool {
 
     public override void OnSelection() {
-        hController.enableLaserPointer(false);
+        if(hController != null)
+            hController.enableLaserPointer(false);
     }
 
     public override void BrushAltFire() {
