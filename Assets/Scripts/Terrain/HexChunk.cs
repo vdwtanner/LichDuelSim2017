@@ -105,8 +105,11 @@ public class HexChunk : MonoBehaviour {
     public bool isValidHex(Vector3 pos) {
         float maxVariance = hGrid.maxVariance;
         float sum = hGrid.getTerrain().SampleHeight(pos);
+        Vector3[] heights = new Vector3[6];
         for (int i = 0; i < 6; i++) {
-            sum += hGrid.getTerrain().SampleHeight(mHexVerts[i] + pos);
+            heights[i] = mHexVerts[i] + pos;
+            heights[i].y = hGrid.getTerrain().SampleHeight(heights[i]);
+            sum += heights[i].y;
         }
         float avg = sum / 7.0f;
         if (Mathf.Abs(hGrid.getTerrain().SampleHeight(pos) - avg) > maxVariance)
@@ -115,7 +118,16 @@ public class HexChunk : MonoBehaviour {
             if (Mathf.Abs(hGrid.getTerrain().SampleHeight(mHexVerts[i] + pos) - avg) > maxVariance)
                 return false;
         }
+        if (Mathf.Abs(getDiffFromCoplanar(heights[0], heights[1], heights[3], heights[4])) > hGrid.coplanarTolerance)
+            return false;
+        if (Mathf.Abs(getDiffFromCoplanar(heights[1], heights[2], heights[4], heights[5])) > hGrid.coplanarTolerance)
+            return false;
+
         return true;
+    }
+
+    float getDiffFromCoplanar(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4) {
+        return Vector3.Dot((v3 - v1), Vector3.Cross((v2 - v1), (v4 - v3)));
     }
 
     public void RebuildMesh() {

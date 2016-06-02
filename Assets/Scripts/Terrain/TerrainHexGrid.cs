@@ -29,6 +29,7 @@ public class TerrainHexGrid : MonoBehaviour {
     public float offsetFromTerrain = 0.1f;
     [Header("Hex Validity")]
     public float maxVariance = 0.3f;
+    [Range(0.0f, 1.0f)] public float coplanarTolerance = 0.2f;
 
 
     private float mHexSideLength;
