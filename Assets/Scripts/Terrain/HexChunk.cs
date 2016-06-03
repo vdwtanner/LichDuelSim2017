@@ -133,10 +133,12 @@ public class HexChunk : MonoBehaviour {
     public void RebuildMesh() {
         List<Vector3> verts = new List<Vector3>();
         List<int> tris = new List<int>();
+        List<Vector2> uvs = new List<Vector2>();
         int triOffset = 0;
         for (int i = 0; i < mChunkSize; i++) {
             for (int j = 0; j < mChunkSize; j++) {
                 if (mHexArr[i, j].isValid()) {
+                    // build verts
                     for (int k = 0; k < 6; k++) {
                         Vector3 v = new Vector3();
                         v.x = mHexVerts[k].x;
@@ -145,10 +147,18 @@ public class HexChunk : MonoBehaviour {
                         v.y = hGrid.getTerrain().SampleHeight(v + mHexArr[i, j].position + transform.position) + hGrid.offsetFromTerrain;
                         verts.Add(v + mHexArr[i, j].position);
                     }
+                    // build tris
                     for (int k = 0; k < 12; k++) {
                         tris.Add(mTriangles[k] + triOffset);
                     }
                     triOffset = verts.Count;
+                    // build uvs
+                    uvs.Add(new Vector2(0.25f, 0.0f));
+                    uvs.Add(new Vector2(0.0f, 0.433013f));
+                    uvs.Add(new Vector2(0.25f, 0.866025f));
+                    uvs.Add(new Vector2(0.75f, 0.866025f));
+                    uvs.Add(new Vector2(1.0f, 0.433013f));
+                    uvs.Add(new Vector2(0.75f, 0.0f));
                 }
             }
         }
@@ -156,6 +166,8 @@ public class HexChunk : MonoBehaviour {
         mMesh.Clear();
         mMesh.vertices = verts.ToArray();
         mMesh.SetTriangles(tris.ToArray(), 0);
+        mMesh.SetUVs(0, uvs);
+        
         mMesh.RecalculateBounds();
         mMesh.RecalculateNormals();
 
