@@ -140,6 +140,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         if(controller != null) {
             float sizeChange = controller.getAxis("scrollWheel").x / 2.0f;
 
+            brushCursorPrefab.transform.rotation = controller.transform.rotation;
             if (sizeChange != 0) {
                 if (mSizeBeforeResize == -1) {
                     mSizeBeforeResize = getBrushSize();
@@ -172,13 +173,18 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         return mBrushTexture;
     }
 
+    public void setBrushTexture(Texture2D tex) {
+        brushCursorPrefab.GetComponent<Projector>().material.SetTexture("_ShadowTex", tex);
+        setBrushSize(this.size);
+    }
+
     public void setBrushSize(int size) {
         // update the brush texture
         //Debug.Log("New Size = " + size);
         if (size > 100)
             size = 100;
-        if (size < 1)
-            size = 1;
+        if (size < 4)
+            size = 4;
         this.size = size;
         Texture2D tex = mCursorInstance.GetComponent<Projector>().material.GetTexture("_ShadowTex") as Texture2D;
         Texture2D tCopy = Instantiate(tex);

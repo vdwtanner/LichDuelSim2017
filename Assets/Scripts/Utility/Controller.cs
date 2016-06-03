@@ -24,13 +24,15 @@ public class Controller : MonoBehaviour {
     private float scrollWheelStartRotation = 0;
     private bool setStartRotation = false;
 
+    public VRHelper vrHelper { get; private set; }
+
     //Text areas
     private Dictionary<string, float> textTimers;
     private bool checkTextTimers = false;
     private List<string> timerKeys;
 
     //Laser
-    private SteamVR_LaserPointer laserPointer;
+    public LaserPointer laserPointer { get; private set; }
     public Color laserPointerColor = Color.green;
 
     //Happens before Start(), which is good for functions that want to tell the controller to show the mouse wheel in their start functions.
@@ -38,14 +40,15 @@ public class Controller : MonoBehaviour {
         trackedObj = GetComponent<SteamVR_TrackedObject>();
         renderModel = transform.GetChild(0).GetComponent<SteamVR_RenderModel>();//This should be the Model GameObject
         initTextTimers();
-        laserPointer = gameObject.AddComponent<SteamVR_LaserPointer>();
+        laserPointer = gameObject.AddComponent<LaserPointer>();
         laserPointer.color = laserPointerColor;
         laserPointer.showLaserOnStart = false;
+        vrHelper = transform.parent.GetComponent<VRHelper>();
     }
 
     // Use this for initialization
     void Start () {
-
+        
     }
 
     void initTextTimers() {
@@ -260,5 +263,9 @@ public class Controller : MonoBehaviour {
     /// <param name="enabled"></param>
     public void enableLaserPointer(bool enabled) {
         laserPointer.pointer.GetComponent<Renderer>().enabled = enabled;
+    }
+
+    public RaycastHit getLaserPointerRaycastHit() {
+        return laserPointer.hit;
     }
 }
