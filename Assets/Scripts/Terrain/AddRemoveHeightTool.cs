@@ -58,7 +58,7 @@ public class AddRemoveHeightTool : TerrainTool {
     }
 
     public override void BrushAltFireUp() {
-        Debug.Log("AddRemoveHeightTool::BrushAltFireUp does nothing");
+        //Debug.Log("AddRemoveHeightTool::BrushAltFireUp does nothing");
     }
 
     public override void ModifyTerrain(){

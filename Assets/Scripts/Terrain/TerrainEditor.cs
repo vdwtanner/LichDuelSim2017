@@ -119,14 +119,14 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         }
         if ((rightMouseClick || controllerGripsPressed) && mTimer == 0.0f) {
             mActiveTool.BrushAltFire();
-            Debug.Log("Alt Fire!");
+            //Debug.Log("Alt Fire!");
             mLODsdone = false;
             mTimer = timeBetweenBrush;
         }
         mLastBrushX = mActiveTool.getHit().point.x;
         mLastBrushY = mActiveTool.getHit().point.y;
 
-        if (!mLODsdone && !leftMouseClick && !controllerTriggerPressed && mActiveTool.getHitTerrain() != null) {
+        if (!mLODsdone && !leftMouseClick && !controllerTriggerPressed && !controllerGripsPressed && mActiveTool.getHitTerrain() != null) {
             mActiveTool.getHitTerrain().ApplyDelayedHeightmapModification();
             TerrainHexGrid grid = mActiveTool.getHitTerrain().gameObject.GetComponent<TerrainHexGrid>();
             if (grid != null)

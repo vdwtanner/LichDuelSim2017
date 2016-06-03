@@ -31,7 +31,7 @@ public class PaintHeightTool : TerrainTool {
                 }
             }
            
-            Debug.Log("Sample Height is " + mSampleHeight);
+            //Debug.Log("Sample Height is " + mSampleHeight);
         } else {
             Debug.Log("PaintHeightTool::BrushAltFire terrain is null");
             mSampleHeight = -1;
