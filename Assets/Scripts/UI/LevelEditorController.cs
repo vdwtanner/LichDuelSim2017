@@ -60,15 +60,23 @@ public class LevelEditorController : MonoBehaviour {
 
     void OnPointerIn(object sender, PointerEventArgs e) {
         if(e.target.tag == "GUI") {
-            e.target.GetComponent<UIButton>().OnPointerIn(controller);
-        }
+			if(e.target.GetComponent<UIButton>()){
+				e.target.GetComponent<UIButton>().OnPointerIn(controller);
+			}
+			if (e.target.GetComponent<UISlider>()) {
+				e.target.GetComponent<UISlider>().OnPointerIn(controller);
+			}
+		}
     }
 
     void OnPointerStay(object sender, PointerEventArgs e) {
-        if (e.target.tag == "GUI") {
-            e.target.GetComponent<UIButton>().OnPointerStay(controller);
-        }
-    }
+		if (e.target.GetComponent<UIButton>()) {
+			e.target.GetComponent<UIButton>().OnPointerStay(controller);
+		}
+		if (e.target.GetComponent<UISlider>()) {
+			e.target.GetComponent<UISlider>().OnPointerStay(controller);
+		}
+	}
 
     void teleportationManager() {
         if (controller.getButtonPressed("touchpad")) {

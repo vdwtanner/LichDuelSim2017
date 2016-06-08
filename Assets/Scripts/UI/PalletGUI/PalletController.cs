@@ -48,7 +48,7 @@ public class PalletController : MonoBehaviour, SwipeListener {
         for(int x = 0; x<4; x++) {
             uiWindows[x] = new PalletUIWindow(pallet.FindChild("Side " + x));
         }
-        
+        //Brushes
         string directory = Path.Combine(Application.streamingAssetsPath, "Level Editor/Brushes/");
         byte[] fileData;
         int index = 0;
@@ -60,13 +60,24 @@ public class PalletController : MonoBehaviour, SwipeListener {
             Texture2D texture = new Texture2D(2, 2);
             texture.LoadImage(fileData);
             texture.wrapMode = TextureWrapMode.Clamp;
-            float x = ((index % 3) - 1) * .3f;
-            float y = .3f - .15f * (index / 3);
-            UIButton uiButton = uiWindows[2].addButton(new Vector2(x, y), new Vector2(.28f, .14f), texture);
+            float y = ((index % 3) - 1) * .3f;
+            float x = .3f - .15f * (index / 3);
+            UIButton uiButton = uiWindows[1].addButton(new Vector2(x, y), new Vector2(.14f, .28f), texture);
             uiButton.onTriggerDown += setBrushTexture;
             index++;
         }
+		//Slider for scaling player
+		UISlider playerScale = uiWindows[0].addSlider(new Vector2(0, 0), new Vector2(.6f, .08f), new Vector2(.04f, 2f), null, null);
+		playerScale.min = .2f;
+		playerScale.max = 25f;
+		playerScale.setCalculatedValue(5);
+		playerScale.onTriggerUp += setPlayerScale;
     }
+
+	void setPlayerScale(UISlider slider) {
+		float scale = slider.calcValue();
+		transform.parent.localScale = new Vector3(scale, scale, scale);
+	}
 
     void setBrushTexture(UIButton button) {
         levelEditorController.terrainEditor.setBrushTexture((Texture2D)button.GetComponent<Renderer>().material.GetTexture("_MainTex"));

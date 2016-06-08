@@ -14,6 +14,7 @@ public class LaserPointer : MonoBehaviour {
     public event PointerEventHandler PointerIn;
     public event PointerEventHandler PointerStay;
     public event PointerEventHandler PointerOut;
+	public Vector3 collisionPoint;
     /// <summary>
     /// The RaycastHit that is used by the laser pointer
     /// </summary>
@@ -82,7 +83,6 @@ public class LaserPointer : MonoBehaviour {
         Ray raycast = new Ray(transform.position, transform.forward);
 
         bool bHit = Physics.Raycast(raycast, out hit);
-
         if (previousContact && previousContact != hit.transform) {
             PointerEventArgs args = new PointerEventArgs();
             if (controller != null) {
@@ -117,9 +117,10 @@ public class LaserPointer : MonoBehaviour {
         }
         if (!bHit) {
             previousContact = null;
-        }
+		}
         if (bHit && hit.distance < 100f) {
             dist = hit.distance;
+			collisionPoint = hit.point;
         }
 
         if (controller != null && controller.triggerPressed) {
