@@ -33,6 +33,7 @@ public class LevelEditorController : MonoBehaviour {
         terrainEditor = GetComponent<TerrainEditor>();
         controller.laserPointer.PointerIn += OnPointerIn;
         controller.laserPointer.PointerStay += OnPointerStay;
+		controller.laserPointer.PointerOut += OnPointerOut;
     }
 	
 	// Update is called once per frame
@@ -66,18 +67,38 @@ public class LevelEditorController : MonoBehaviour {
 			if (e.target.GetComponent<UISlider>()) {
 				e.target.GetComponent<UISlider>().OnPointerIn(controller);
 			}
+			if (e.target.GetComponent<UIListener>()) {
+				e.target.GetComponent<UIListener>().OnPointerStay(controller);
+			}
 		}
     }
 
     void OnPointerStay(object sender, PointerEventArgs e) {
-		if (e.target.GetComponent<UIButton>()) {
-			e.target.GetComponent<UIButton>().OnPointerStay(controller);
+		if(e.target.tag == "GUI") {
+			if (e.target.GetComponent<UIButton>()) {
+				e.target.GetComponent<UIButton>().OnPointerStay(controller);
+			}
+			if (e.target.GetComponent<UISlider>()) {
+				e.target.GetComponent<UISlider>().OnPointerStay(controller);
+			}
+			if (e.target.GetComponent<UIListener>()) {
+				e.target.GetComponent<UIListener>().OnPointerStay(controller);
+			}
 		}
-		if (e.target.GetComponent<UISlider>()) {
-			e.target.GetComponent<UISlider>().OnPointerStay(controller);
-		}
-		if (e.target.GetComponent<UIListener>()) {
-			e.target.GetComponent<UIListener>().OnPointerStay(controller);
+		
+	}
+
+	void OnPointerOut(object sender, PointerEventArgs e) {
+		if (e.target.tag == "GUI") {
+			/*if (e.target.GetComponent<UIButton>()) {
+				e.target.GetComponent<UIButton>().OnPointerOut(controller);
+			}*/
+			if (e.target.GetComponent<UISlider>()) {
+				e.target.GetComponent<UISlider>().OnPointerOut(controller);
+			}
+			if (e.target.GetComponent<UIListener>()) {
+				e.target.GetComponent<UIListener>().OnPointerOut(controller);
+			}
 		}
 	}
 

@@ -6,10 +6,12 @@ public class UIButton : MonoBehaviour {
     public delegate void OnPointerEnter(UIButton button);
     public OnTriggerDown onTriggerDown;
     public OnPointerEnter onPointerEnter;
+	public string tooltipText = "";
+	private TextMesh textArea;
 
-     
 	// Use this for initialization
 	void Start () {
+		textArea = transform.parent.parent.parent.FindChild("TooltipTextArea").GetComponent<TextMesh>();
 	}
 	
     public void OnPointerIn(Controller controller) {
@@ -19,6 +21,7 @@ public class UIButton : MonoBehaviour {
     }
 
 	public void OnPointerStay(Controller controller) {
+		textArea.text = tooltipText;
         if(onTriggerDown != null) {
             if (controller.getButtonDown("trigger")) {
                 onTriggerDown(this);

@@ -18,7 +18,7 @@ public class PalletUIWindow{
     /// <param name="scale">Scale of the element relative to the window. Remember that the window is longer on the Y axis</param>
     /// <param name="texture">The texture for the button.</param>
     /// <returns>The button so that you can add functionality to it via delegate methods.</returns>
-    public UIButton addButton(Vector2 localPosition, Vector2 scale, Texture texture) {
+    public UIButton addButton(Vector2 localPosition, Vector2 scale, string tooltipText = "", Texture texture=null) {
         Material material = new Material(Shader.Find("Unlit/Texture"));
         material.mainTexture = texture;
         GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -32,7 +32,9 @@ public class PalletUIWindow{
 		quad.name = "Button";
         Vector3 loc = new Vector3(localPosition.x, localPosition.y, -.01f);
         quad.transform.localPosition = loc;
-        return quad.AddComponent<UIButton>();
+		UIButton button = quad.AddComponent<UIButton>();
+		button.tooltipText = tooltipText;
+		return button;
     }
 
 	/// <summary>
@@ -44,7 +46,7 @@ public class PalletUIWindow{
 	/// <param name="trackTexture">The texture to apply to the track</param>
 	/// <param name="sliderTexture">The texture to apply to the slider</param>
 	/// <returns>The slider that was created so that you can attach functionality to it via delegate methods.</returns>
-	public UISlider addSlider(Vector2 localPosition, Vector2 trackScale, Vector2 sliderScale, Texture trackTexture, Texture sliderTexture) {
+	public UISlider addSlider(Vector2 localPosition, Vector2 trackScale, Vector2 sliderScale, string tooltipText="", Texture trackTexture=null, Texture sliderTexture=null) {
 		GameObject sliderTrack = GameObject.CreatePrimitive(PrimitiveType.Quad);
 		if (trackTexture != null) {
 			Material material = new Material(Shader.Find("Unlit/Texture"));
@@ -63,6 +65,7 @@ public class PalletUIWindow{
 		Vector3 loc = new Vector3(localPosition.x, localPosition.y, -.01f);
 		sliderTrack.transform.localPosition = loc;
 		UISlider uiSlider = sliderTrack.AddComponent<UISlider>();
+		uiSlider.tooltipText = tooltipText;
 		//Add Slider to track
 		GameObject slider = GameObject.CreatePrimitive(PrimitiveType.Quad);
 		if (sliderTexture != null) {
@@ -87,6 +90,7 @@ public class PalletUIWindow{
 		UIListener uiListener = slider.AddComponent<UIListener>();
 		uiListener.onPointerEnter += uiSlider.OnPointerIn;
 		uiListener.onPointerRemain += uiSlider.OnPointerStay;
+		uiListener.onPointerExit += uiSlider.OnPointerOut;
 
 		return uiSlider;
 	}

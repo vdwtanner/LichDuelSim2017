@@ -11,6 +11,7 @@ public class UISlider : MonoBehaviour {
     public OnPointerDrag onPointerDrag;
 	public OnTriggerUp onTriggerUp;
     public bool isVertical = true;
+	private bool draggingSlider = false;
 	/// <summary>
 	/// This is good for getting closer to the specified min and max values. LArger sliders have a harder time reaching min and max due to the implementation.
 	/// </summary>
@@ -19,12 +20,15 @@ public class UISlider : MonoBehaviour {
     public float min = 0;
     public float max = 1.0f;
 	public float calculatedValue;
+	public string tooltipText = "";
+	private TextMesh textArea;
 
 	public Transform slider;
 
     // Use this for initialization
     void Start () {
 		calculatedValue = calcValue();
+		textArea = transform.parent.parent.parent.FindChild("TooltipTextArea").GetComponent<TextMesh>();
 	}
 
     public void OnPointerIn(Controller controller) {
@@ -34,12 +38,14 @@ public class UISlider : MonoBehaviour {
     }
 
     public void OnPointerStay(Controller controller) {
+		textArea.text = tooltipText;
         if (controller.getButtonDown("trigger")) {
+			draggingSlider = true;
             if(onTriggerDown != null) {
                 onTriggerDown(this);
             }
         }
-        if (controller.getButtonPressed("trigger")) {
+        if (controller.getButtonPressed("trigger") && draggingSlider) {
 			if(onPointerDrag != null) {
 				onPointerDrag(this);
 			}
@@ -47,9 +53,23 @@ public class UISlider : MonoBehaviour {
 			setValue(slider.localPosition.x+.5f);
         }
 		if (controller.getButtonUp("trigger")) {
+			draggingSlider = false;
 			if (onTriggerUp != null) {
 				onTriggerUp(this);
 			}
+		}
+	}
+
+	public void OnPointerOut(Controller controller) {
+		if (draggingSlider) {
+			controller.onTriggerRelease += OnDragTriggerRelease;
+		}
+	}
+
+	public void OnDragTriggerRelease(Controller controller) {
+		draggingSlider = false;
+		if (onTriggerUp != null) {
+			onTriggerUp(this);
 		}
 	}
 
@@ -63,7 +83,7 @@ public class UISlider : MonoBehaviour {
     public void setValue(float value) {
         this.value = value;
 		Vector3 pos = slider.localPosition;
-		pos.x = value - .5f;
+		pos.x = Mathf.Clamp(value - .5f, -.5f, .5f);
 		pos.y = 0;
 		pos.z = 0;
 		slider.localPosition = pos;
