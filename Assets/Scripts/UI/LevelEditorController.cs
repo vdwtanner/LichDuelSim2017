@@ -76,6 +76,9 @@ public class LevelEditorController : MonoBehaviour {
 		if (e.target.GetComponent<UISlider>()) {
 			e.target.GetComponent<UISlider>().OnPointerStay(controller);
 		}
+		if (e.target.GetComponent<UIListener>()) {
+			e.target.GetComponent<UIListener>().OnPointerStay(controller);
+		}
 	}
 
     void teleportationManager() {

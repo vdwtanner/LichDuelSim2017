@@ -15,6 +15,7 @@ public class LaserPointer : MonoBehaviour {
     public event PointerEventHandler PointerStay;
     public event PointerEventHandler PointerOut;
 	public Vector3 collisionPoint;
+	private float initialScale;
     /// <summary>
     /// The RaycastHit that is used by the laser pointer
     /// </summary>
@@ -50,6 +51,7 @@ public class LaserPointer : MonoBehaviour {
         newMaterial.SetColor("_Color", color);
         pointer.GetComponent<MeshRenderer>().material = newMaterial;
         pointer.GetComponent<Renderer>().enabled = showLaserOnStart;
+		initialScale = transform.parent.localScale.x;//We alsways scale the player uniformly
     }
 
     public virtual void OnPointerIn(PointerEventArgs e) {
@@ -119,7 +121,7 @@ public class LaserPointer : MonoBehaviour {
             previousContact = null;
 		}
         if (bHit && hit.distance < 100f) {
-            dist = hit.distance;
+            dist = hit.distance * (initialScale / transform.parent.localScale.x);
 			collisionPoint = hit.point;
         }
 

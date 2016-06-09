@@ -84,6 +84,9 @@ public class PalletUIWindow{
 		loc = new Vector3(localPosition.x, localPosition.y, -.01f);
 		slider.transform.localPosition = loc;
 		uiSlider.slider = slider.transform;
+		UIListener uiListener = slider.AddComponent<UIListener>();
+		uiListener.onPointerEnter += uiSlider.OnPointerIn;
+		uiListener.onPointerRemain += uiSlider.OnPointerStay;
 
 		return uiSlider;
 	}

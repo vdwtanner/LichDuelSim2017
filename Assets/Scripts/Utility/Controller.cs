@@ -53,7 +53,16 @@ public class Controller : MonoBehaviour {
 
     void initTextTimers() {
         textTimers = new Dictionary<string, float>();
-        textTimers.Add("base", 0);
+		Transform model = transform.FindChild("Model");
+		for(int x = 0; x < model.childCount; x++) {
+			Transform attachPoint = model.GetChild(x).FindChild("attach");
+			if (attachPoint) {
+				Transform textArea = attachPoint.FindChild("TextArea");
+				if (textArea) {
+					textTimers.Add(attachPoint.parent.name, 0);
+				}
+			}
+		}
         timerKeys = new List<string>(textTimers.Keys);
     }
 
