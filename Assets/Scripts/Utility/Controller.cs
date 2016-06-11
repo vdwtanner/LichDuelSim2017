@@ -35,6 +35,10 @@ public class Controller : MonoBehaviour {
     public LaserPointer laserPointer { get; private set; }
     public Color laserPointerColor = Color.green;
 
+	//Events
+	public delegate void OnTriggerRelease(Controller controller);
+	public OnTriggerRelease onTriggerRelease;
+
     //Happens before Start(), which is good for functions that want to tell the controller to show the mouse wheel in their start functions.
     void Awake() {
         trackedObj = GetComponent<SteamVR_TrackedObject>();
@@ -46,14 +50,18 @@ public class Controller : MonoBehaviour {
         vrHelper = transform.parent.GetComponent<VRHelper>();
     }
 
-    // Use this for initialization
-    void Start () {
-        
-    }
-
     void initTextTimers() {
         textTimers = new Dictionary<string, float>();
-        textTimers.Add("base", 0);
+		Transform model = transform.FindChild("Model");
+		for(int x = 0; x < model.childCount; x++) {
+			Transform attachPoint = model.GetChild(x).FindChild("attach");
+			if (attachPoint) {
+				Transform textArea = attachPoint.FindChild("TextArea");
+				if (textArea) {
+					textTimers.Add(attachPoint.parent.name, 0);
+				}
+			}
+		}
         timerKeys = new List<string>(textTimers.Keys);
     }
 
@@ -65,7 +73,11 @@ public class Controller : MonoBehaviour {
         if (checkTextTimers) {
             textTimerManager();
         }
-           
+		//Check for events. These could be moved into an Update method so that they get called more frequently, but having it here should slightly improve performance
+        if(onTriggerRelease != null && !getButtonPressed("trigger")) {
+			onTriggerRelease(this);
+			onTriggerRelease = null;
+		}
     }
 
     void textTimerManager() {
