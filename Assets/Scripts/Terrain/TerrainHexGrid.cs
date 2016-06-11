@@ -21,6 +21,12 @@ public class TerrainHexGrid : MonoBehaviour {
 
     */
 
+    public enum HexTextureType {
+        Default = 0,
+        Valid = 1,
+        Attack = 2
+    }
+
     // distance from one vertex to its opposite vertex
     [Header("Hex Settings")]
     public Material hexMaterial;
@@ -30,8 +36,14 @@ public class TerrainHexGrid : MonoBehaviour {
     [Header("Hex Validity")]
     public float maxVariance = 0.3f;
     [Range(0.0f, 1.0f)] public float coplanarTolerance = 0.2f;
+    [Header("Textures")]
+    public Texture defaultTex;
+    public Texture validMoveTex;
+    public Texture attackRangeTex;
 
 
+    private Texture2D mAtlasTexture;
+    private Rect[] mAtlas;
     private float mHexSideLength;
     private float mHexEdgeToEdgeLength;
 
@@ -83,6 +95,18 @@ public class TerrainHexGrid : MonoBehaviour {
                 mChunkList[i, j] = chunk;
             }
         }
+        Texture2D[] texArray = new Texture2D[2];
+        texArray[(int)HexTextureType.Default] = defaultTex as Texture2D;
+        texArray[(int)HexTextureType.Valid] = validMoveTex as Texture2D;
+        //texArray[(int)HexTextureType.Attack] = attackRangeTex as Texture2D;
+
+        mAtlasTexture = new Texture2D(1048, 1048);
+        mAtlas = mAtlasTexture.PackTextures(texArray, 2, 1048);
+        Debug.Log(mAtlas);
+
+        for (int i = 0; i < mAtlas.GetLength(0); i++) {
+            Debug.Log(mAtlas[i]);
+        }
 
 	}
 
@@ -112,6 +136,38 @@ public class TerrainHexGrid : MonoBehaviour {
         }
 
         yield return null;
+    }
+
+
+    Vector2 GetHexIndexFromWorldPos(Vector3 worldPos) {
+        Vector3 chunklocal = worldPos - transform.position - transform.parent.position;
+
+        // x position is difficult
+        // start by finding its position with a uniform x axis, where the two non-uniform lengths are combined
+        float uniform2X = chunklocal.x / (hexSize + mHexSideLength);
+        float extra = uniform2X - Mathf.Floor(uniform2X);
+        // figure out at what value of extra we're in the smaller length hex
+        float smallerHexThresh = hexSize / (hexSize + mHexSideLength);
+        int finalX = (int)(Mathf.Floor(uniform2X) * 2);
+        if (extra >= smallerHexThresh)
+            finalX += 1;
+
+        // y position is easy, but we gotta remember that offset every other column yo
+        int finalY = 0;
+        if (finalX % 2 == 0) {
+            finalY = (int)(chunklocal.z / mHexEdgeToEdgeLength);
+        } else {
+            finalY = (int)((chunklocal.z / mHexEdgeToEdgeLength) + (mHexEdgeToEdgeLength / 2));
+        }
+
+        return new Vector2(finalX, finalY);
+    }
+
+    public void SetHexTexture(Vector3 worldPos, HexTextureType texture) {
+        Vector2 idx = GetHexIndexFromWorldPos(worldPos);
+        int chunkIdxX = (int)idx.x / hexChunkSize;
+        int chunkIdxY = (int)idx.y / hexChunkSize;
+        mChunkList[chunkIdxX, chunkIdxY].SetHexUV((int)idx.x % hexChunkSize, (int)idx.y % hexChunkSize, mAtlas[(int)texture]);
     }
 
     public Terrain getTerrain() {

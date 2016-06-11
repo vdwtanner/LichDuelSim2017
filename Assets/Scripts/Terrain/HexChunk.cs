@@ -176,6 +176,13 @@ public class HexChunk : MonoBehaviour {
 
     }
 
+    public void SetHexUV(int x, int y, Rect rect) {
+        Vector2[] uvs = mMesh.uv;
+        
+        //uvs[x * mChunkSize + y] = 
+
+    }
+
 
 
 }
