@@ -24,7 +24,8 @@ public class TerrainHexGrid : MonoBehaviour {
     public enum HexTextureType {
         Default = 0,
         Valid = 1,
-        Attack = 2
+        Invalid = 2,
+        Attack = 3
     }
 
     // distance from one vertex to its opposite vertex
@@ -40,6 +41,7 @@ public class TerrainHexGrid : MonoBehaviour {
     public Texture defaultTex;
     public Texture validMoveTex;
     public Texture attackRangeTex;
+    public Texture invalidTex;
 
 
     private Texture2D mAtlasTexture;
@@ -66,6 +68,18 @@ public class TerrainHexGrid : MonoBehaviour {
             Debug.LogError("TerrainHexGrid has no terrain component on its gameobject!");
         if (hexChunkSize % 2 != 0)
             Debug.LogError("TerrainHexGrid hexChunkSize MUST be a multiple of 2.");
+
+
+        Texture2D[] texArray = new Texture2D[4];
+        texArray[(int)HexTextureType.Default] = defaultTex as Texture2D;
+        texArray[(int)HexTextureType.Valid] = validMoveTex as Texture2D;
+        texArray[(int)HexTextureType.Attack] = attackRangeTex as Texture2D;
+        texArray[(int)HexTextureType.Invalid] = invalidTex as Texture2D;
+
+        mAtlasTexture = new Texture2D(1048, 1048);
+        mAtlas = mAtlasTexture.PackTextures(texArray, 2, 1048);
+
+        hexMaterial.SetTexture("_MainTex", mAtlasTexture);
 
         // figure out our other lengths from the hexSize
         mHexSideLength = hexSize * Mathf.Cos((1.0f / 3.0f) * Mathf.PI);
@@ -94,18 +108,6 @@ public class TerrainHexGrid : MonoBehaviour {
                 chunk.transform.parent = this.transform;
                 mChunkList[i, j] = chunk;
             }
-        }
-        Texture2D[] texArray = new Texture2D[2];
-        texArray[(int)HexTextureType.Default] = defaultTex as Texture2D;
-        texArray[(int)HexTextureType.Valid] = validMoveTex as Texture2D;
-        //texArray[(int)HexTextureType.Attack] = attackRangeTex as Texture2D;
-
-        mAtlasTexture = new Texture2D(1048, 1048);
-        mAtlas = mAtlasTexture.PackTextures(texArray, 2, 1048);
-        Debug.Log(mAtlas);
-
-        for (int i = 0; i < mAtlas.GetLength(0); i++) {
-            Debug.Log(mAtlas[i]);
         }
 
 	}
@@ -140,37 +142,71 @@ public class TerrainHexGrid : MonoBehaviour {
 
 
     Vector2 GetHexIndexFromWorldPos(Vector3 worldPos) {
-        Vector3 chunklocal = worldPos - transform.position - transform.parent.position;
+        Vector3 gridlocal = worldPos - (transform.position - new Vector3(mHexSideLength/2, 0, mHexEdgeToEdgeLength/2));
 
-        // x position is difficult
-        // start by finding its position with a uniform x axis, where the two non-uniform lengths are combined
-        float uniform2X = chunklocal.x / (hexSize + mHexSideLength);
-        float extra = uniform2X - Mathf.Floor(uniform2X);
-        // figure out at what value of extra we're in the smaller length hex
-        float smallerHexThresh = hexSize / (hexSize + mHexSideLength);
-        int finalX = (int)(Mathf.Floor(uniform2X) * 2);
-        if (extra >= smallerHexThresh)
-            finalX += 1;
+        // x position
+        // http://stackoverflow.com/questions/7705228/hexagonal-grids-how-do-you-find-which-hexagon-a-point-is-in
+        // using the box based solution described above,
+        // 0.75 is the gridHeight of a size 1 hex
+        float boxX = gridlocal.x / (0.75f * hexSize);
 
-        // y position is easy, but we gotta remember that offset every other column yo
-        int finalY = 0;
-        if (finalX % 2 == 0) {
-            finalY = (int)(chunklocal.z / mHexEdgeToEdgeLength);
+        // y position
+        float boxY = 0;
+        if ((int)boxX % 2 == 0) {
+            boxY = (gridlocal.z / mHexEdgeToEdgeLength);
         } else {
-            finalY = (int)((chunklocal.z / mHexEdgeToEdgeLength) + (mHexEdgeToEdgeLength / 2));
+            boxY = ((gridlocal.z - (mHexEdgeToEdgeLength / 2)) / mHexEdgeToEdgeLength);
         }
 
-        return new Vector2(finalX, finalY);
+        float relX = boxX - (int)(boxX);
+        float relY = boxY - (int)(boxY);
+
+        float m = (mHexEdgeToEdgeLength / 2) / (.25f * hexSize);
+
+        float cposM = 0.8660254f;
+        float cnegM = cposM + mHexEdgeToEdgeLength;
+
+        // the constants are arbitrary, my c values are wrong but could never figure out why. The extra 0.35 and 0.5 seem to get it accurate enough
+        if (relY < (m * relX) - cposM - 0.35f) {
+            if ((int)boxX % 2 == 0)
+                boxY--;
+            boxX++;
+        } else if (relY > (-m * relX) + cnegM + 0.5f) {
+            if ((int)boxX % 2 == 1)
+                boxY++;
+            boxX++;
+        }
+
+        return new Vector2((int)boxX, (int)boxY);
     }
 
     public void SetHexTexture(Vector3 worldPos, HexTextureType texture) {
         Vector2 idx = GetHexIndexFromWorldPos(worldPos);
         int chunkIdxX = (int)idx.x / hexChunkSize;
         int chunkIdxY = (int)idx.y / hexChunkSize;
-        mChunkList[chunkIdxX, chunkIdxY].SetHexUV((int)idx.x % hexChunkSize, (int)idx.y % hexChunkSize, mAtlas[(int)texture]);
+        mChunkList[chunkIdxX, chunkIdxY].SetHexUVRebuild((int)idx.x % hexChunkSize, (int)idx.y % hexChunkSize, mAtlas[(int)texture]);
+    }
+
+    public void SetHexValid(Vector3 worldPos, bool isValid, bool ignoreAutoValidation = false) {
+        Vector2 idx = GetHexIndexFromWorldPos(worldPos);
+        int chunkIdxX = (int)idx.x / hexChunkSize;
+        int chunkIdxY = (int)idx.y / hexChunkSize;
+        mChunkList[chunkIdxX, chunkIdxY].SetHexValid((int)idx.x % hexChunkSize, (int)idx.y % hexChunkSize, isValid, ignoreAutoValidation);
+        if(isValid)
+            mChunkList[chunkIdxX, chunkIdxY].SetHexUVRebuild((int)idx.x % hexChunkSize, (int)idx.y % hexChunkSize, mAtlas[(int)HexTextureType.Valid]);
+        else if (!isValid && ignoreAutoValidation)
+            mChunkList[chunkIdxX, chunkIdxY].SetHexUVRebuild((int)idx.x % hexChunkSize, (int)idx.y % hexChunkSize, mAtlas[(int)HexTextureType.Invalid]);
     }
 
     public Terrain getTerrain() {
         return hTerrain;
+    }
+
+    public Texture2D getAtlasTexture() {
+        return mAtlasTexture;
+    }
+
+    public Rect[] getAtlas() {
+        return mAtlas;
     }
 }

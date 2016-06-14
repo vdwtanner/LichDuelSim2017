@@ -5,6 +5,7 @@ public abstract class TerrainTool{
 
     protected TerrainEditor mTEditor;
     protected Terrain mTargetTerrain;
+    protected TerrainHexGrid mTargetHexGrid;
     protected RaycastHit mHit;
     protected Controller hController;
 
@@ -20,6 +21,7 @@ public abstract class TerrainTool{
             Terrain hitTerrain = mHit.collider.gameObject.GetComponent<Terrain>();
             if (hitTerrain != null) {
                 mTargetTerrain = hitTerrain;
+                mTargetHexGrid = hitTerrain.GetComponent<TerrainHexGrid>();
                 mTEditor.getCursor().transform.position = new Vector3(mHit.point.x, mHit.point.y + 10f, mHit.point.z);
                 mTEditor.getCursor().GetComponent<Projector>().orthographicSize = (mTEditor.getBrushSize() / 2) * hitTerrain.terrainData.heightmapScale.x;
             }
@@ -32,6 +34,10 @@ public abstract class TerrainTool{
 
     public Terrain getHitTerrain() {
         return mTargetTerrain;
+    }
+
+    public TerrainHexGrid getHexGrid() {
+        return mTargetHexGrid;
     }
 
     public RaycastHit getHit() {

@@ -25,6 +25,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
     private AddRemoveHeightTool mAddRemoveTool;
     private PaintHeightTool mPaintHeightTool;
     private SmoothHeightTool mSmoothTool;
+    private HexValidationTool mHexValidationTool;
     private TerrainTool[] mTools;
     private int mToolIndex;
 
@@ -56,6 +57,8 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         mPaintHeightTool.Initialize(this);
         mSmoothTool = new SmoothHeightTool();
         mSmoothTool.Initialize(this);
+        mHexValidationTool = new HexValidationTool();
+        mHexValidationTool.Initialize(this);
         mActiveTool = mAddRemoveTool;
         //mActiveTool = mSmoothTool;
         mTimer = timeBetweenBrush;
@@ -64,10 +67,11 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
             controller.showScrollWheel(true);
         mLODsdone = true;
         //Allows for quick tool swap
-        mTools = new TerrainTool[3];
+        mTools = new TerrainTool[4];
         mTools[0] = mAddRemoveTool;
         mTools[1] = mPaintHeightTool;
         mTools[2] = mSmoothTool;
+        mTools[3] = mHexValidationTool;
         mToolIndex = 0;
 
         setBrushSize(size);
@@ -229,4 +233,5 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
     public void OnSwipeUp(float velocity) {}
     //Don't use these since it will override the size changer
     public void OnSwipeDown(float velocity) {}
+
 }

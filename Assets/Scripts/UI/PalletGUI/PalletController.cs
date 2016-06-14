@@ -81,6 +81,7 @@ public class PalletController : MonoBehaviour, SwipeListener {
 		playerScale.setCalculatedValue(Config.godScale);
 		playerScale.onTriggerUp += setPlayerScale;
 		playerScale.onPointerDrag += updateScaleToolTip;
+
     }
 
 	void updateScaleToolTip(UISlider slider) {
@@ -88,10 +89,12 @@ public class PalletController : MonoBehaviour, SwipeListener {
 		slider.tooltipText = "Player Scale\n" + (value / 100.0f);
 	}
 
-	void setPlayerScale(UISlider slider) {
+
+    void setPlayerScale(UISlider slider) {
 		float scale = slider.calcValue();
 		transform.parent.localScale = new Vector3(scale, scale, scale);
 	}
+
 
     void setBrushTexture(UIButton button) {
         levelEditorController.terrainEditor.setBrushTexture((Texture2D)button.GetComponent<Renderer>().material.GetTexture("_MainTex"));

@@ -1,15 +1,15 @@
 fileFormatVersion: 2
-guid: acb8d7eef691b4a4baaf03ee6217539d
-timeCreated: 1464930568
+guid: a45af7a27616cb24fae84c6d68853121
+timeCreated: 1464932009
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName: {}
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 1
+    enableMipMap: 0
     linearTexture: 0
-    correctGamma: 1
+    correctGamma: 0
     fadeOut: 0
     borderMipMap: 0
     mipMapFadeDistanceStart: 1
@@ -45,7 +45,7 @@ TextureImporter:
   spritePivot: {x: 0.5, y: 0.5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 100
-  alphaIsTransparency: 0
+  alphaIsTransparency: 1
   spriteTessellationDetail: -1
   textureType: 5
   buildTargetSettings: []

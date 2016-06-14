@@ -24,7 +24,7 @@ public class PaintHeightTool : TerrainTool {
             try {
                 mSampleHeight = getHitTerrain().terrainData.GetHeights(heightmapOffsetX, heightmapOffsetY, 1, 1)[0, 0];
             }catch {
-                Debug.LogWarning("PaintHeightTool was checking outside the bounds again. It's such a naughty thing.");
+                //Debug.LogWarning("PaintHeightTool was checking outside the bounds again. It's such a naughty thing.");
                 if (hController != null) {
                     hController.showText("Can only sample\nheight from the terrain", "base", 2.0f);
                     

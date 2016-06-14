@@ -20,6 +20,7 @@ public class HexChunk : MonoBehaviour {
 
     private Vector3[] mHexVerts;
     private int[] mTriangles;
+    private Vector2[] mHexUVs;
 
     public void Initialize(TerrainHexGrid grid, Vector3 chunkPos, int chunkSize, float hexSize, Material mat) {
         transform.position = chunkPos;
@@ -53,7 +54,8 @@ public class HexChunk : MonoBehaviour {
                 if (i % 2 != 0) {
                     z += (mHexEdgeToEdgeLength / 2);
                 }
-                mHexArr[i, j] = new Hex(x, y, z, hexSize);
+                Rect r = hGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default];
+                mHexArr[i, j] = new Hex(x, y, z, hexSize, r);
             }
         }
 
@@ -76,6 +78,16 @@ public class HexChunk : MonoBehaviour {
             3, 4, 5
         };
 
+        mHexUVs = new Vector2[] 
+        {
+            new Vector2(0.25f, 0.0f),
+            new Vector2(0.0f, 0.433013f),
+            new Vector2(0.25f, 0.866025f),
+            new Vector2(0.75f, 0.866025f),
+            new Vector2(1.0f, 0.433013f),
+            new Vector2(0.75f, 0.0f)
+        };
+
         UpdateValidity();
         //UpdateHexHeights();
         RebuildMesh();
@@ -91,12 +103,16 @@ public class HexChunk : MonoBehaviour {
     }
 
     public void UpdateValidity() {
+        Rect r = hGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default];
         for (int i = 0; i < mChunkSize; i++) {
             for (int j = 0; j < mChunkSize; j++) {
-                if (isValidHex(mHexArr[i, j].position + transform.position)) {
-                    mHexArr[i, j].setValid(true);
-                } else {
-                    mHexArr[i, j].setValid(false);
+                if (!mHexArr[i, j].ignoreAutoValidate()) {
+                    if (isValidHex(mHexArr[i, j].position + transform.position)) {
+                        mHexArr[i, j].setValid(true, false);
+                    } else {
+                        mHexArr[i, j].setValid(false, false);
+                    }
+                    mHexArr[i, j].setUVRect(r);
                 }
             }
         }
@@ -137,7 +153,8 @@ public class HexChunk : MonoBehaviour {
         int triOffset = 0;
         for (int i = 0; i < mChunkSize; i++) {
             for (int j = 0; j < mChunkSize; j++) {
-                if (mHexArr[i, j].isValid()) {
+                // if the hex is ignoring autovalidate, we need to display it so the user knows
+                if (mHexArr[i, j].isValid() || mHexArr[i, j].ignoreAutoValidate()) {
                     // build verts
                     for (int k = 0; k < 6; k++) {
                         Vector3 v = new Vector3();
@@ -153,12 +170,15 @@ public class HexChunk : MonoBehaviour {
                     }
                     triOffset = verts.Count;
                     // build uvs
-                    uvs.Add(new Vector2(0.25f, 0.0f));
-                    uvs.Add(new Vector2(0.0f, 0.433013f));
-                    uvs.Add(new Vector2(0.25f, 0.866025f));
-                    uvs.Add(new Vector2(0.75f, 0.866025f));
-                    uvs.Add(new Vector2(1.0f, 0.433013f));
-                    uvs.Add(new Vector2(0.75f, 0.0f));
+                    for (int k = 0; k < 6; k++) {
+                        Rect r = mHexArr[i, j].getUVRect();
+                        Vector2 transUV = new Vector2(mHexUVs[k].x, mHexUVs[k].y);
+                        transUV.x *= r.width;
+                        transUV.y *= r.height;
+                        transUV.x += r.x;
+                        transUV.y += r.y;
+                        uvs.Add(transUV);
+                    }
                 }
             }
         }
@@ -176,13 +196,46 @@ public class HexChunk : MonoBehaviour {
 
     }
 
-    public void SetHexUV(int x, int y, Rect rect) {
+    /*public void SetHexUV(int x, int y, Rect rect) {
         Vector2[] uvs = mMesh.uv;
-        
-        //uvs[x * mChunkSize + y] = 
 
+        int uvIndex = 0;
+        bool stop = false;
+        for (int i = 0; i < mChunkSize; i++) {
+            for (int j = 0; j < mChunkSize; j++) {
+                if (i == x && y == j) {
+                    stop = true;
+                    break;
+                }
+                if (mHexArr[i, j].isValid()) {
+                    uvIndex += 6;
+                }
+            }
+            if (stop)
+                break;
+        }
+        for (int k = 0; k < 6; k++) {
+            if (uvIndex + k >= uvs.GetLength(0))
+                return;
+            Vector2 transUV = new Vector2(mHexUVs[k].x, mHexUVs[k].y);
+            transUV.x *= rect.width;
+            transUV.y *= rect.height;
+            transUV.x += rect.x;
+            transUV.y += rect.y;
+            uvs[uvIndex + k] = transUV;
+        }
+        mHexArr[x, y].setUVRect(rect);
+        mMesh.uv = uvs;
+        mMesh.UploadMeshData(false);
+
+    }*/
+
+    public void SetHexUVRebuild(int x, int y, Rect rect) {
+        mHexArr[x, y].setUVRect(rect);
+        RebuildMesh();
     }
 
-
-
+    public void SetHexValid(int x, int y, bool isValid, bool ignoreAutoValidation) {
+        mHexArr[x, y].setValid(isValid, ignoreAutoValidation);
+    }
 }
