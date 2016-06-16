@@ -2,7 +2,10 @@
 using System.Collections;
 using System;
 
-public class SmoothHeightTool : TerrainTool {
+public class PaintHeightTool : EditorTool {
+
+    float mSampleHeight = -1;
+
 
     public override void OnSelection() {
         if(hController != null)
@@ -10,18 +13,46 @@ public class SmoothHeightTool : TerrainTool {
     }
 
     public override void BrushAltFire() {
-        Debug.Log("SmoothHeightTool::BrushAltFire does nothing");
+        if(hController != null && hController.getButtonDown("grip")) {
+            hController.enableLaserPointer(true);
+        }
+        // sample height of terrain
+        if (getHitTerrain() != null) {
+            Vector3 heightmapScale = getHitTerrain().terrainData.heightmapScale;
+            int heightmapOffsetX = (int)((getHit().point.x - getHitTerrain().GetPosition().x) / heightmapScale.x);
+            int heightmapOffsetY = (int)((getHit().point.z - getHitTerrain().GetPosition().z) / heightmapScale.z);
+            try {
+                mSampleHeight = getHitTerrain().terrainData.GetHeights(heightmapOffsetX, heightmapOffsetY, 1, 1)[0, 0];
+            }catch {
+                //Debug.LogWarning("PaintHeightTool was checking outside the bounds again. It's such a naughty thing.");
+                if (hController != null) {
+                    hController.showText("Can only sample\nheight from the terrain", "base", 2.0f);
+                    
+                }
+            }
+           
+            //Debug.Log("Sample Height is " + mSampleHeight);
+        } else {
+            Debug.Log("PaintHeightTool::BrushAltFire terrain is null");
+            mSampleHeight = -1;
+        }
     }
 
     public override void BrushAltFireUp() {
-        Debug.Log("SmoothHeightTool::BrushAltFireUp does nothing");
+        if(hController != null)
+            hController.enableLaserPointer(false);
     }
 
-    public override void ModifyTerrain() {
+    public override void ModifyTerrain(){
+        if (mSampleHeight == -1) {
+            Debug.Log("PaintHeightTool::ModifyTerrain sample height was not set");
+            return;
+        }
         if (getHit().collider == null)
             return;
         if (getHit().collider.gameObject.GetComponent<Terrain>() == null)
             return;
+
         // get brush texture
         Texture2D tex2D = getEditor().getBrushTexture();
 
@@ -47,50 +78,28 @@ public class SmoothHeightTool : TerrainTool {
         float[,] heights = getHitTerrain().terrainData.GetHeights(heightmapOffsetX, heightmapOffsetY, width, height);
         Color32[] pixels = tex2D.GetPixels32();
         int texWidth = tex2D.width;
-        TerrainEditor editor = getEditor();
-        float brushOpacity = editor.getBrushOpacity();
+        float brushOpacity = getEditor().getBrushOpacity();
 
         for (int i = imgOffsetX; i < width; i++) {
             for (int j = imgOffsetY; j < height; j++) {
                 // for some reason height and width are switched in the array returned by getHeights
                 int x = i - imgOffsetX;
                 int y = j - imgOffsetY;
-                float defVal = heights[y, x];
-                float hm00 = getHeightForGaussian(heights, x - 1, y - 1, defVal);
-                float hm01 = getHeightForGaussian(heights, x, y - 1, defVal) * 2;
-                float hm02 = getHeightForGaussian(heights, x + 1, y - 1, defVal);
-
-                float hm10 = getHeightForGaussian(heights, x - 1, y, defVal) * 2;
-                float hm11 = defVal * 4;
-                float hm12 = getHeightForGaussian(heights, x + 1, y, defVal) * 2;
-
-                float hm20 = getHeightForGaussian(heights, x - 1, y + 1, defVal);
-                float hm21 = getHeightForGaussian(heights, x, y + 1, defVal) * 2;
-                float hm22 = getHeightForGaussian(heights, x + 1, y + 1, defVal);
-
-                float newHeight = hm00 + hm01 + hm02 + hm10 + hm11 + hm12 + hm20 + hm21 + hm22;
-                newHeight /= 16.0f;
-                float diffHeight = newHeight - heights[y, x];
-                diffHeight *= pixels[i * texWidth + j].a / 255.0f;
-                diffHeight *= brushOpacity;
-                heights[y, x] += diffHeight;  
-
+                if (heights[y, x] < mSampleHeight) {
+                    heights[y, x] += ((pixels[i * texWidth + j].a / 255.0f) / 100) * brushOpacity;
+                    if (heights[y, x] > mSampleHeight) {
+                        heights[y, x] = mSampleHeight;
+                    }
+                } else if (heights[y, x] > mSampleHeight) {
+                    heights[y, x] -= ((pixels[i * texWidth + j].a / 255.0f) / 100) * brushOpacity;
+                    if (heights[y, x] < mSampleHeight) {
+                        heights[y, x] = mSampleHeight;
+                    }
+                }
             }
         }
 
         getHitTerrain().terrainData.SetHeightsDelayLOD(heightmapOffsetX, heightmapOffsetY, heights);
-    }
 
-    float getHeightForGaussian(float[,] heights, int x, int y, float defaultVal) {
-        if (x < 0)
-            return defaultVal;
-        if (x >= heights.GetLength(1))
-            return defaultVal;
-        if (y < 0)
-            return defaultVal;
-        if (y >= heights.GetLength(0))
-            return defaultVal;
-        return heights[y, x];
-        
     }
 }

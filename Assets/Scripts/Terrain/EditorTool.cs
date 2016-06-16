@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public abstract class TerrainTool{
+public abstract class EditorTool{
 
     protected TerrainEditor mTEditor;
     protected Terrain mTargetTerrain;

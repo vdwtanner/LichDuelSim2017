@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 using System;
 
 /*
@@ -13,23 +13,18 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
     [Range(0.0f, 1.0f)]public float timeBetweenBrush = 0.1f;
     public GameObject brushCursorPrefab;
 
-    [Header("Add/Remove Height Tool")]
-    public int Aplaceholder;
+	public enum EditorMode{ TERRAIN_HEIGHT, TERRAIN_TEXTURE, HEX_VALIDATION};
 
-    [Header("Paint Height Tool")]
-    public int PHplaceholder;
-
-    [Header("Smooth Tool")]
-    public int Splaceholder;
-
-    private AddRemoveHeightTool mAddRemoveTool;
-    private PaintHeightTool mPaintHeightTool;
-    private SmoothHeightTool mSmoothTool;
+    //private AddRemoveHeightTool mAddRemoveTool;
+    //private PaintHeightTool mPaintHeightTool;
+    //private SmoothHeightTool mSmoothTool;
     private HexValidationTool mHexValidationTool;
-    private TerrainTool[] mTools;
+    //private TerrainTool[] mTools;
+	private Dictionary<EditorMode, List<EditorTool>> mTools;
     private int mToolIndex;
+	private EditorMode mEditorMode;
 
-    private TerrainTool mActiveTool;
+    private EditorTool mActiveTool;
 
     private GameObject mCursorInstance;
     private Texture2D mBrushTexture;
@@ -51,28 +46,45 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         mCursorInstance = (GameObject)Instantiate(brushCursorPrefab, new Vector3(0.0f, 0.0f, 0.0f), Quaternion.Euler(90, 0, 0));
 
         // add all tool scripts to the object we're on
-        mAddRemoveTool = new AddRemoveHeightTool();
+        /*mAddRemoveTool = new AddRemoveHeightTool();
         mAddRemoveTool.Initialize(this);
         mPaintHeightTool = new PaintHeightTool();
         mPaintHeightTool.Initialize(this);
         mSmoothTool = new SmoothHeightTool();
-        mSmoothTool.Initialize(this);
-        mHexValidationTool = new HexValidationTool();
-        mHexValidationTool.Initialize(this);
-        mActiveTool = mAddRemoveTool;
+        mSmoothTool.Initialize(this);*/
+        //mHexValidationTool = new HexValidationTool();
+        //mHexValidationTool.Initialize(this);
+        //mActiveTool = mAddRemoveTool;
         //mActiveTool = mSmoothTool;
         mTimer = timeBetweenBrush;
         controller = GetComponent<Controller>();
         if(controller != null)
             controller.showScrollWheel(true);
         mLODsdone = true;
-        //Allows for quick tool swap
-        mTools = new TerrainTool[4];
-        mTools[0] = mAddRemoveTool;
-        mTools[1] = mPaintHeightTool;
-        mTools[2] = mSmoothTool;
-        mTools[3] = mHexValidationTool;
-        mToolIndex = 0;
+		//Allows for quick tool swap
+		//mTools = new TerrainTool[4];
+		mTools = new Dictionary<EditorMode, List<EditorTool>>();
+		mTools.Add(EditorMode.TERRAIN_HEIGHT, new List<EditorTool>());
+		mTools.Add(EditorMode.TERRAIN_TEXTURE, new List<EditorTool>());
+		mTools.Add(EditorMode.HEX_VALIDATION, new List<EditorTool>());
+		List<EditorTool> tools;
+		mTools.TryGetValue(EditorMode.TERRAIN_HEIGHT, out tools);
+		tools.Add(new AddRemoveHeightTool());
+		tools.Add(new PaintHeightTool());
+		tools.Add(new SmoothHeightTool());
+		foreach(EditorTool tool in tools) {
+			tool.Initialize(this);
+		}
+		mTools.TryGetValue(EditorMode.HEX_VALIDATION, out tools);
+		tools.Add(new HexValidationTool());
+		tools.Add(new HexInvalidationTool());
+		tools.Add(new HexClearValidationTool());
+		foreach (EditorTool tool in tools) {
+			tool.Initialize(this);
+		}
+		mEditorMode = EditorMode.TERRAIN_HEIGHT;
+		mToolIndex = 0;
+		mActiveTool = getActiveTool();
 
         setBrushSize(size);
 	}
@@ -96,24 +108,24 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         bool controllerGripsUp = (controller == null) ? false : controller.getButtonUp("grip");
 
         if (addremoveIn) {
-            mActiveTool = mAddRemoveTool;
             mToolIndex = 0;
-            mTools[mToolIndex].OnSelection();
-        }
+            getActiveTool().OnSelection();
+			mActiveTool = getActiveTool();
+		}
         if (paintHeightIn) {
-            mActiveTool = mPaintHeightTool;
             mToolIndex = 1;
-            mTools[mToolIndex].OnSelection();
-        }
+			getActiveTool().OnSelection();
+			mActiveTool = getActiveTool();
+		}
         if (smoothIn) {
-            mActiveTool = mSmoothTool;
             mToolIndex = 2;
-            mTools[mToolIndex].OnSelection();
+			getActiveTool().OnSelection();
+			mActiveTool = getActiveTool();
         }
 
         if(controllerGripsUp || Input.GetMouseButtonUp(1)) {
-            //This is the same as mActiveTool, but is a step towards removing that extra variable and making it more scalable
-            mTools[mToolIndex].BrushAltFireUp();
+			//This is the same as mActiveTool, but is a step towards removing that extra variable and making it more scalable
+			getActiveTool().BrushAltFireUp();
         }
 
         if ((controllerTriggerPressed || leftMouseClick) && (mLastBrushX != mActiveTool.getHit().point.x || mLastBrushY != mActiveTool.getHit().point.y) && mTimer == 0.0f) {
@@ -211,20 +223,21 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
     }
 
     public void OnSwipeRight(float velocity) {
-        mToolIndex = (mToolIndex + 1) % mTools.Length;
-        mActiveTool = mTools[mToolIndex];
-        mTools[mToolIndex].OnSelection();
+        mToolIndex = (mToolIndex + 1) % getActiveToolList().Count;
+        mActiveTool = getActiveTool();
+		getActiveTool().OnSelection();
         controller.showText(mActiveTool.GetType().ToString(), "base", 2.0f);
         Debug.Log("Current tool: " + mActiveTool.GetType());//Need to create UI to show these things
     }
 
     public void OnSwipeLeft(float velocity) {
-        mToolIndex = (mToolIndex - 1) % mTools.Length;
+		int toolCount = getActiveToolList().Count;
+		mToolIndex = (mToolIndex - 1) % toolCount;
         if (mToolIndex < 0) {
-            mToolIndex = mTools.Length + mToolIndex;
+            mToolIndex = toolCount + mToolIndex;
         }
-        mActiveTool = mTools[mToolIndex];
-        mTools[mToolIndex].OnSelection();
+        mActiveTool = getActiveTool();
+		getActiveTool().OnSelection();
         controller.showText(mActiveTool.GetType().ToString(), "base", 2.0f);
         Debug.Log("Current tool: " + mActiveTool.GetType());//Need to create UI to show these things
     }
@@ -234,4 +247,20 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
     //Don't use these since it will override the size changer
     public void OnSwipeDown(float velocity) {}
 
+
+	public EditorTool getActiveTool() {
+		List<EditorTool> tools;
+		mTools.TryGetValue(mEditorMode, out tools);
+		return tools[mToolIndex];
+	}
+
+	public List<EditorTool> getActiveToolList() {
+		List<EditorTool> tools;
+		mTools.TryGetValue(mEditorMode, out tools);
+		return tools;
+	}
+
+	public void setEditorMode(EditorMode mode) {
+		mEditorMode = mode;
+	}
 }

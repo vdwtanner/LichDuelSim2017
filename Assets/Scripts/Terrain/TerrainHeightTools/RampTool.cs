@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class RampTool : TerrainTool {
+public class RampTool : EditorTool {
 
     Vector3 mFirstPoint;
     Vector3 mSecondPoint;

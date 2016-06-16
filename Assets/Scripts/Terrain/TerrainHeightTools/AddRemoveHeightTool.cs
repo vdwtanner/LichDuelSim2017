@@ -2,7 +2,7 @@
 using System.Collections;
 using System;
 
-public class AddRemoveHeightTool : TerrainTool {
+public class AddRemoveHeightTool : EditorTool {
 
     public override void OnSelection() {
         if(hController != null)
