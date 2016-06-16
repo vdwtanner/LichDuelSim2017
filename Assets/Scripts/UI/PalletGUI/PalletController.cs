@@ -28,6 +28,10 @@ public class PalletController : MonoBehaviour, SwipeListener {
 	private string oldText;
 	private float timeSinceTextChanged;
 	public float timeBeforeTextCleared = 1f;
+	[Header("Button Textures")]
+	public Texture heightmapToolsTex;
+	public Texture hexValidationToolsTex;
+
 
 	// Use this for initialization
 	void Start () {
@@ -82,23 +86,37 @@ public class PalletController : MonoBehaviour, SwipeListener {
 		playerScale.onTriggerUp += setPlayerScale;
 		playerScale.onPointerDrag += updateScaleToolTip;
 
-    }
+		//Buttons to chose editor tool
+		UIButton terrainHeightButton = uiWindows[2].addButton(new Vector2(.3f, .2f), new Vector2(.18f, .36f), "Terrain Height Tools", heightmapToolsTex);
+		terrainHeightButton.onTriggerDown += setEditMode;
+		UIButton hexValidationButton = uiWindows[2].addButton(new Vector2(.3f, -.2f), new Vector2(.18f, .36f), "Hex Validation Tools", hexValidationToolsTex);
+		hexValidationButton.onTriggerDown += setEditMode;
+	}
 
 	void updateScaleToolTip(UISlider slider) {
 		int value = Mathf.RoundToInt(slider.calcValue()*100);
 		slider.tooltipText = "Player Scale\n" + (value / 100.0f);
 	}
 
-
     void setPlayerScale(UISlider slider) {
 		float scale = slider.calcValue();
 		transform.parent.localScale = new Vector3(scale, scale, scale);
 	}
 
-
     void setBrushTexture(UIButton button) {
         levelEditorController.terrainEditor.setBrushTexture((Texture2D)button.GetComponent<Renderer>().material.GetTexture("_MainTex"));
     }
+
+	void setEditMode(UIButton button) {
+		switch (button.tooltipText) {
+			case "Terrain Height Tools":
+				levelEditorController.terrainEditor.setEditorMode(TerrainEditor.EditorMode.TERRAIN_HEIGHT);
+				break;
+			case "Hex Validation Tools":
+				levelEditorController.terrainEditor.setEditorMode(TerrainEditor.EditorMode.HEX_VALIDATION);
+				break;
+		}
+	}
 	
 	// Update is called once per frame
 	void Update () {

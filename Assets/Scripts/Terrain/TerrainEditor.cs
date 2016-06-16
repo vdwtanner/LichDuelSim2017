@@ -190,7 +190,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
     }
 
     public void setBrushTexture(Texture2D tex) {
-        brushCursorPrefab.GetComponent<Projector>().material.SetTexture("_ShadowTex", tex);
+        mCursorInstance.GetComponent<Projector>().material.SetTexture("_ShadowTex", tex);
         setBrushSize(this.size);
     }
 
