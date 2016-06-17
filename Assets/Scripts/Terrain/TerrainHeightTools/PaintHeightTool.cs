@@ -43,7 +43,7 @@ public class PaintHeightTool : EditorTool {
             hController.enableLaserPointer(false);
     }
 
-    public override void ModifyTerrain(){
+    public override void BrushPrimaryFire(){
         if (mSampleHeight == -1) {
             Debug.Log("PaintHeightTool::ModifyTerrain sample height was not set");
             return;

@@ -20,7 +20,7 @@ public class HexValidationTool : EditorTool {
         
     }
 
-    public override void ModifyTerrain() {
+    public override void BrushPrimaryFire() {
         if (hController != null) {
             hController.enableLaserPointer(true);
         }

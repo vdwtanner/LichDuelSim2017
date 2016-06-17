@@ -44,7 +44,7 @@ public abstract class EditorTool{
         return mHit;
     }
 
-    public abstract void ModifyTerrain();
+    public abstract void BrushPrimaryFire();
     public abstract void BrushAltFire();
     /// <summary>
     /// This is called on the frame that the alt fire button is released

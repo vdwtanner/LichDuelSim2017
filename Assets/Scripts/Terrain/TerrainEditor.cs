@@ -129,7 +129,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         }
 
         if ((controllerTriggerPressed || leftMouseClick) && (mLastBrushX != mActiveTool.getHit().point.x || mLastBrushY != mActiveTool.getHit().point.y) && mTimer == 0.0f) {
-            mActiveTool.ModifyTerrain();
+            mActiveTool.BrushPrimaryFire();
             mLODsdone = false;
             mTimer = timeBetweenBrush;
         }

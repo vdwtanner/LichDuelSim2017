@@ -23,7 +23,7 @@ public class RampTool : EditorTool {
 
     }
 
-    public override void ModifyTerrain() {
+    public override void BrushPrimaryFire() {
         if (mFirstPoint.y != -1 && mSecondPoint.y != -1) {
             // set the first point again
 

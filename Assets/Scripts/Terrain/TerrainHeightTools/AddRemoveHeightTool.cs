@@ -61,7 +61,7 @@ public class AddRemoveHeightTool : EditorTool {
         //Debug.Log("AddRemoveHeightTool::BrushAltFireUp does nothing");
     }
 
-    public override void ModifyTerrain(){
+    public override void BrushPrimaryFire(){
         if (getHit().collider == null)
             return;
         if (getHit().collider.gameObject.GetComponent<Terrain>() == null)
