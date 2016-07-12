@@ -72,6 +72,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
 		tools.Add(new AddRemoveHeightTool());
 		tools.Add(new PaintHeightTool());
 		tools.Add(new SmoothHeightTool());
+        tools.Add(new RampTool());
 		foreach(EditorTool tool in tools) {
 			tool.Initialize(this);
 		}
@@ -98,6 +99,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         bool addremoveIn = Input.GetKeyUp(KeyCode.Z);
         bool paintHeightIn = Input.GetKeyUp(KeyCode.X);
         bool smoothIn = Input.GetKeyUp(KeyCode.V);
+        bool rampIn = Input.GetKeyUp(KeyCode.B);
         bool leftMouseClick = Input.GetMouseButton(0);
         bool rightMouseClick = Input.GetMouseButton(1);
 
@@ -109,18 +111,23 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
 
         if (addremoveIn) {
             mToolIndex = 0;
+            mActiveTool = getActiveTool();
             getActiveTool().OnSelection();
-			mActiveTool = getActiveTool();
 		}
         if (paintHeightIn) {
             mToolIndex = 1;
-			getActiveTool().OnSelection();
-			mActiveTool = getActiveTool();
+            mActiveTool = getActiveTool();
+            getActiveTool().OnSelection();
 		}
         if (smoothIn) {
             mToolIndex = 2;
-			getActiveTool().OnSelection();
-			mActiveTool = getActiveTool();
+            mActiveTool = getActiveTool();
+            getActiveTool().OnSelection();
+        }
+        if (rampIn) {
+            mToolIndex = 3;
+            mActiveTool = getActiveTool();
+            getActiveTool().OnSelection();
         }
 
         if(controllerGripsUp || Input.GetMouseButtonUp(1)) {

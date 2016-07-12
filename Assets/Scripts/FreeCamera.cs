@@ -20,7 +20,7 @@ public class FreeCamera : MonoBehaviour {
         Vector3 trans = new Vector3();
         trans.x = Input.GetAxis("Horizontal");
         trans.z = Input.GetAxis("Vertical");
-        trans.y = Input.GetAxis("AscendDescend");
+        //trans.y = Input.GetAxis("AscendDescend");
         trans *= speed;
         transform.Translate(trans.x, 0, trans.z, Space.Self);
         transform.Translate(0, trans.y, 0, Space.World);
@@ -30,5 +30,7 @@ public class FreeCamera : MonoBehaviour {
         pitch = Mathf.Clamp(pitch, -90, 90);
         yaw += Input.GetAxisRaw("Mouse X");
         transform.eulerAngles = new Vector3(pitch, yaw, 0) * rotationSpeed;
+
+		Cursor.lockState = CursorLockMode.Locked;
     }
 }
