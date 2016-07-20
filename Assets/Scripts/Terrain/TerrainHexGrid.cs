@@ -180,6 +180,13 @@ public class TerrainHexGrid : MonoBehaviour {
         return new Vector2((int)boxX, (int)boxY);
     }
 
+	public Hex getHexFromWorldPos(Vector3 worldPos) {
+		Vector2 idx = GetHexIndexFromWorldPos(worldPos);
+		int chunkIdxX = (int)idx.x / hexChunkSize;
+		int chunkIdxY = (int)idx.y / hexChunkSize;
+		return mChunkList[chunkIdxX, chunkIdxY].getHex(idx);
+	}
+
     public void SetHexTexture(Vector3 worldPos, HexTextureType texture) {
         Vector2 idx = GetHexIndexFromWorldPos(worldPos);
         int chunkIdxX = (int)idx.x / hexChunkSize;

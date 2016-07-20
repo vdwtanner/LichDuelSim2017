@@ -30,7 +30,7 @@ public class Possessable : MonoBehaviour {
     void OnTriggerExit(Collider other) {
         GodController gc = other.GetComponent<GodController>();
         if (gc != null) {
-            Debug.Log("Player entered possessable region.");
+            //Debug.Log("Player entered possessable region.");
             Controller controller = other.GetComponent<Controller>();
             if (gc.objectToPossess == gameObject) {
                 gc.objectToPossess = null;

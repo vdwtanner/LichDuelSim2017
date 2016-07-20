@@ -74,7 +74,7 @@ public class GodController : MonoBehaviour {
             //tce.transform.position = transform.position;
             if (!tce.isPlaying) {
                 tce.Play();
-                Debug.Log(transform.name + " controller began particle emmission.");
+                //Debug.Log(transform.name + " controller began particle emmission.");
             }
             Vector3 forward = transform.TransformDirection(Vector3.forward) * teleportDistance;
             RaycastHit hit;
@@ -87,7 +87,7 @@ public class GodController : MonoBehaviour {
                     em.enabled = true;
                     ps.Play();
                     cameraRig.isTeleporting = true;
-                    Debug.Log(transform.name + " controller began teleport particle emmission.");
+                    //Debug.Log(transform.name + " controller began teleport particle emmission.");
                 }
 
                 //ps.Emit(1);
@@ -100,7 +100,7 @@ public class GodController : MonoBehaviour {
             ParticleSystem.EmissionModule em = ps.emission;
             em.enabled = false;
             tce.Stop();
-            Debug.Log(transform.name + " controller stopped particle emmission.");
+            //Debug.Log(transform.name + " controller stopped particle emmission.");
             iOwnPS = false;
             Vector3 pos = ps.transform.position;
             pos.y = cameraRig.terrain.SampleHeight(pos) + cameraRig.terrainHeight;
@@ -122,7 +122,9 @@ public class GodController : MonoBehaviour {
             } else if (objectToGrab.transform.parent == transform) {
                 objectToGrab.transform.parent = null;
                 objectToGrab.GetComponent<Rigidbody>().useGravity = true;
-                objectToGrab.GetComponent<Rigidbody>().velocity = controller.getVelocity();
+				objectToGrab.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
+				objectToGrab.GetComponent<Rigidbody>().velocity = controller.getVelocity();
+				objectToGrab.GetComponent<Grabbable>().snapToGrid();
             }
         }
     }

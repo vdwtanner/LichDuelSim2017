@@ -55,7 +55,9 @@ public class HexChunk : MonoBehaviour {
                     z += (mHexEdgeToEdgeLength / 2);
                 }
                 Rect r = hGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default];
-                mHexArr[i, j] = new Hex(x, y, z, hexSize, r);
+                mHexArr[i, j] = new Hex(x, y, z, hexSize, r, this);
+				Vector3 worldPos = new Vector3(x + transform.position.x, hGrid.getTerrain().SampleHeight(mHexArr[i, j].position + transform.position) + hGrid.offsetFromTerrain, z + transform.position.z);
+				mHexArr[i, j].worldPosition = worldPos;
             }
         }
 
@@ -238,4 +240,15 @@ public class HexChunk : MonoBehaviour {
     public void SetHexValid(int x, int y, bool isValid, bool ignoreAutoValidation) {
         mHexArr[x, y].setValid(isValid, ignoreAutoValidation);
     }
+
+	/// <summary>
+	/// This function should be called from the Terrain HexGrid only since it will have the index for the hex.
+	/// </summary>
+	/// <param name="index"></param>
+	/// <returns></returns>
+	public Hex getHex(Vector2 index) {
+		int hexX = (int)index.x % hGrid.hexChunkSize;
+		int hexY = (int)index.y % hGrid.hexChunkSize;
+		return mHexArr[hexX, hexY];
+	}
 }
