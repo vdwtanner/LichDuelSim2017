@@ -9,6 +9,10 @@ public class AddRemoveHeightTool : EditorTool {
             hController.enableLaserPointer(false);
     }
 
+	public override void OnUnselect() {
+
+	}
+
     public override void BrushAltFire() {
         if (getHit().collider == null)
             return;

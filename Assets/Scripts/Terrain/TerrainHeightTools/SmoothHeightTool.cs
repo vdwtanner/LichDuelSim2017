@@ -9,6 +9,10 @@ public class SmoothHeightTool : EditorTool {
             hController.enableLaserPointer(false);
     }
 
+	public override void OnUnselect() {
+
+	}
+
     public override void BrushAltFire() {
         Debug.Log("SmoothHeightTool::BrushAltFire does nothing");
     }

@@ -9,6 +9,10 @@ public class HexValidationTool : EditorTool {
         }
     }
 
+	public override void OnUnselect() {
+	
+	}
+
     public override void BrushAltFire() {
         if (hController != null) {
             hController.enableLaserPointer(true);

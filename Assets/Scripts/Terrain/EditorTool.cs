@@ -15,7 +15,7 @@ public abstract class EditorTool{
         hController = editor.gameObject.GetComponent<Controller>();
 	}
 	
-	public void FixedUpdate () {
+	public virtual void FixedUpdate () {
         Physics.Raycast(mTEditor.transform.position, mTEditor.transform.forward, out mHit, 100);
         if (mHit.collider != null) {
             Terrain hitTerrain = mHit.collider.gameObject.GetComponent<Terrain>();
@@ -51,5 +51,9 @@ public abstract class EditorTool{
     /// </summary>
     public abstract void BrushAltFireUp();
     public abstract void OnSelection();
+	/// <summary>
+	/// Called when user has tool currently selected, then selects another tool.
+	/// </summary>
+	public abstract void OnUnselect();
 
 }

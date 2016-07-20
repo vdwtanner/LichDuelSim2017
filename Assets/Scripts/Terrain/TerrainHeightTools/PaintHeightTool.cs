@@ -12,6 +12,10 @@ public class PaintHeightTool : EditorTool {
             hController.enableLaserPointer(false);
     }
 
+	public override void OnUnselect() {
+
+	}
+
     public override void BrushAltFire() {
         if(hController != null && hController.getButtonDown("grip")) {
             hController.enableLaserPointer(true);

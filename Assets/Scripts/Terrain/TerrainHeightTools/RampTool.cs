@@ -4,19 +4,41 @@ using System.Collections;
 public class RampTool : EditorTool {
 
     Vector3 mFirstPoint;
+	Vector3	mFirstWorld;
     Vector3 mSecondPoint;
-    float mWidth = 20;
+	Vector3	mSecondWorld;
     Vector3 mPlaneNormal;
     Vector3 mLineVector;
     float mDTerm = 0;
+	GameObject mHeightPlane; 
+
+	public RampTool(){
+		mFirstPoint = new Vector3(0, -1, 0);
+		mSecondPoint = new Vector3(0, -1, 0);
+		mFirstWorld = new Vector3(0, -1, 0);
+		mSecondWorld = new Vector3(0, -1, 0);
+		Mesh m = new Mesh();
+		m.name = "Ramp Height Plane";
+		m.vertices = new Vector3[]{new Vector3(-1, -1, 0.01f), new Vector3(1, -1, 0.01f), new Vector3(1, 1, 0.01f), new Vector3(-1, 1, 0.01f)};
+		m.uv = new Vector2[]{ new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0) };
+		m.triangles = new int[]{ 0, 1, 2, 0, 2, 3 };
+		m.RecalculateNormals();
+		mHeightPlane = new GameObject("HeightPlane", typeof(MeshCollider), typeof(MeshFilter));
+		mHeightPlane.GetComponent<MeshFilter>().mesh = m;
+		mHeightPlane.SetActive(false);
+	}
 
     public override void OnSelection() {
         if (hController != null) {
             hController.enableLaserPointer(true);
         }
-        mFirstPoint = new Vector3(0, -1, 0);
-        mSecondPoint = new Vector3(0, -1, 0);
+		mHeightPlane.SetActive(true);
+
     }
+		
+	public override void OnUnselect() {
+		mHeightPlane.SetActive(false);
+	}
 
     public override void BrushAltFire() {
 
@@ -31,11 +53,13 @@ public class RampTool : EditorTool {
         if (mFirstPoint.y != -1 && mSecondPoint.y != -1) {
             // set the first point again
             mFirstPoint = getHit().point;
+			mFirstWorld = mFirstPoint;
 			mFirstPoint.y = getHitTerrain().SampleHeight(mFirstPoint) / getHitTerrain().terrainData.heightmapScale.y;
             mSecondPoint.y = -1;
         } else if (mFirstPoint.y != -1) {
             // set the second point and paint terrain
             mSecondPoint = getHit().point;
+			mSecondWorld = mSecondPoint;
 			mSecondPoint.y = getHitTerrain().SampleHeight(mSecondPoint) / getHitTerrain().terrainData.heightmapScale.y;
 
             // find slope of line (z in terms of x) projected onto the xz plane 
@@ -70,6 +94,7 @@ public class RampTool : EditorTool {
         } else {
             // set the first point
             mFirstPoint = getHit().point;
+			mFirstWorld = mFirstPoint;
 			float myvar = getHitTerrain().SampleHeight(mFirstPoint);
 			mFirstPoint.y = getHitTerrain().SampleHeight(mFirstPoint) / getHitTerrain().terrainData.heightmapScale.y;
         }
