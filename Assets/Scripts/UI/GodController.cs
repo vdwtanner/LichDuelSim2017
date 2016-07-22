@@ -23,6 +23,7 @@ public class GodController : MonoBehaviour {
 
     //Grabbing
     public GameObject objectToGrab {get; set;}
+	public bool grabbing { get; private set; }
 
     //Possession
     public GameObject objectToPossess { get; set; }
@@ -116,6 +117,7 @@ public class GodController : MonoBehaviour {
     void grabManager() {
         if(objectToGrab != null) {
             if (controller.getButtonPressed("trigger")) {
+				grabbing = true;
                 objectToGrab.transform.parent = transform;
                 objectToGrab.GetComponent<Rigidbody>().useGravity = false;
                 objectToGrab.GetComponent<Rigidbody>().velocity = Vector3.zero;
@@ -126,7 +128,8 @@ public class GodController : MonoBehaviour {
 				objectToGrab.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
 				objectToGrab.GetComponent<Rigidbody>().velocity = controller.getVelocity();
 				objectToGrab.GetComponent<Entity>().snapToGrid();
-            }
+				grabbing = false;
+			}
         }
     }
 

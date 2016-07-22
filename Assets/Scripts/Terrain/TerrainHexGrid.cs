@@ -25,7 +25,8 @@ public class TerrainHexGrid : MonoBehaviour {
         Default = 0,
         Valid = 1,
         Invalid = 2,
-        Attack = 3
+        Attack = 3,
+		CurrentPos = 4
     }
 
     // distance from one vertex to its opposite vertex
@@ -42,6 +43,7 @@ public class TerrainHexGrid : MonoBehaviour {
     public Texture validMoveTex;
     public Texture attackRangeTex;
     public Texture invalidTex;
+	public Texture currentPositionTex;
 
 
     private Texture2D mAtlasTexture;
@@ -70,13 +72,14 @@ public class TerrainHexGrid : MonoBehaviour {
             Debug.LogError("TerrainHexGrid hexChunkSize MUST be a multiple of 2.");
 
 
-        Texture2D[] texArray = new Texture2D[4];
+        Texture2D[] texArray = new Texture2D[5];
         texArray[(int)HexTextureType.Default] = defaultTex as Texture2D;
         texArray[(int)HexTextureType.Valid] = validMoveTex as Texture2D;
         texArray[(int)HexTextureType.Attack] = attackRangeTex as Texture2D;
         texArray[(int)HexTextureType.Invalid] = invalidTex as Texture2D;
+		texArray[(int)HexTextureType.CurrentPos] = currentPositionTex as Texture2D;
 
-        mAtlasTexture = new Texture2D(1048, 1048);
+		mAtlasTexture = new Texture2D(1048, 1048);
         mAtlas = mAtlasTexture.PackTextures(texArray, 2, 1048);
 
         hexMaterial.SetTexture("_MainTex", mAtlasTexture);
@@ -234,11 +237,52 @@ public class TerrainHexGrid : MonoBehaviour {
 			foreach (Vector3 cube in fringe) {
 				for (int x = 0; x < 6; x++) {
 					Vector3 neighborCube = Hex.cubeNeighbor(cube, x);
-					Vector2 neighborOffset = Hex.getEvenQVerticalCoords(neighborCube);
+					Vector2 neighborOffset = Hex.getOddQVerticalCoords(neighborCube);
 					Hex neighbor = getHexFromOffsetCoords(neighborOffset);
 					if (neighbor != null && !visited.Contains(neighbor) && neighbor.isValid()) {
 						visited.Add(neighbor);
 						nextFringe.Add(neighborCube);
+					}
+				}
+			}
+			fringe = nextFringe;
+		}
+		return visited;
+	}
+
+	/// <summary>
+	/// Get all Hexes reachable from the specified cube coord.
+	/// Denies movement through hexes that contain Entities associated with a different team.
+	/// </summary>
+	/// <param name="hex"></param>
+	/// <param name="range"></param>
+	/// <param name="team">The team to compare against</param>
+	/// <returns></returns>
+	public HashSet<Hex> getReachableHexes(Hex hex, int range, int team) {
+		Vector3 cubeCoord = hex.getCubeCoords();
+		HashSet<Hex> visited = new HashSet<Hex>();
+		visited.Add(hex);
+		List<Vector3> fringe = new List<Vector3>();
+		fringe.Add(cubeCoord);
+		for (int i = 1; i <= range; i++) {
+			List<Vector3> nextFringe = new List<Vector3>();
+			foreach (Vector3 cube in fringe) {
+				for (int x = 0; x < 6; x++) {
+					Vector3 neighborCube = Hex.cubeNeighbor(cube, x);
+					Vector2 neighborOffset = Hex.getOddQVerticalCoords(neighborCube);
+					Hex neighbor = getHexFromOffsetCoords(neighborOffset);
+					if (neighbor != null && !visited.Contains(neighbor) && neighbor.isValid()) {
+						Entity entity = neighbor.getEntity();
+						if(entity != null) {
+							if(entity.m_team == team) {
+								visited.Add(neighbor);
+								nextFringe.Add(neighborCube);
+							}
+						} else {
+							visited.Add(neighbor);
+							nextFringe.Add(neighborCube);
+						}
+						
 					}
 				}
 			}

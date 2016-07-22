@@ -15,6 +15,8 @@ public class Hex{
     private Rect mUVRect;
 	private HexChunk hChunk;
 
+	private Entity h_entity;
+
 	/// <summary>
 	/// Index order: Bottom right, top Right, top, top left, bottom left, bottom
 	/// </summary>
@@ -48,7 +50,18 @@ public class Hex{
         mUVRect = r;
     }
 
-    public Rect getUVRect() {
+	/// <summary>
+	/// Update the UV of a hex and then immediately have the chunk update itself.
+	/// THIS IS EXPENSIVE! If more than one hex needs to be updated, use setUVRect(Rect)
+	/// for all hexes and then rebuild the mesh(es).
+	/// </summary>
+	/// <param name="r"></param>
+	public void setUVRectAndUpdate(Rect r) {
+		mUVRect = r;
+		hChunk.RebuildMesh();
+	}
+
+	public Rect getUVRect() {
         return mUVRect;
     }
 
@@ -75,7 +88,7 @@ public class Hex{
 	}
 
 	/// <summary>
-	/// Get cube coords from even-q vertical offset coords
+	/// Get cube coords from odd-q vertical offset coords
 	/// </summary>
 	/// <param name="evenQVertCoords">X: column, Y: row</param>
 	/// <returns></returns>
@@ -90,11 +103,11 @@ public class Hex{
 	}
 
 	/// <summary>
-	/// Get even-q vertical offset coords from cube coords
+	/// Get odd-q vertical offset coords from cube coords
 	/// </summary>
 	/// <param name="cubeCoords"></param>
 	/// <returns>col, row</returns>
-	public static Vector2 getEvenQVerticalCoords(Vector3 cubeCoords) {
+	public static Vector2 getOddQVerticalCoords(Vector3 cubeCoords) {
 		int col = (int)cubeCoords.x;
 		int row = (int)(cubeCoords.z) + (col - (col & 1)) / 2;
 		return new Vector2(col, row);
@@ -114,4 +127,11 @@ public class Hex{
 		return cubeCoord + cubeDirections[directionIndex];
 	}
 	
+	public Entity getEntity() {
+		return h_entity;
+	}
+
+	public void setEntity(Entity entity) {
+		h_entity = entity;
+	}
 }

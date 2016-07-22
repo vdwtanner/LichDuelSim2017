@@ -4,10 +4,11 @@ using System.Collections.Generic;
 [RequireComponent(typeof(Collider))]
 public class Entity : MonoBehaviour {
 	private Hex mHex;
-	public bool mSnapToGrid;
+	public bool m_snapToGrid;
 	private bool mSnapRequested;
 	private bool mOnTerrain = false;
 	private bool mShowMovementRange;
+	public int m_team = 0;
 
 	private UnitStats hUnitStats;
 
@@ -15,27 +16,44 @@ public class Entity : MonoBehaviour {
 	private HashSet<Hex> mMovementRange;
 	private HashSet<HexChunk> mMovementChunks;
 
+	private TerrainHexGrid h_terrainHexGrid;
+
 	void Start() {
 		hUnitStats = GetComponent<UnitStats>();
+		h_terrainHexGrid = GameObject.FindGameObjectWithTag("Terrain").GetComponent<TerrainHexGrid>();
+		if (h_terrainHexGrid == null) {
+			Debug.LogError("The Terrain doesn't have a TerrainHexGrid");
+			throw new MissingComponentException("The Terrain doesn't have a TerrainHexGrid component attached!");
+		}
+		/*Hex hex = thg.getHexFromWorldPos(transform.position);
+		if (hex.isValid()) {
+			snapTo(hex.worldPosition);
+			mHex = hex;
+		}*/
 	}
 
 	public void showMovementRange() {
 		if(hUnitStats != null) {
-			TerrainHexGrid thg = GameObject.FindGameObjectWithTag("Terrain").GetComponent<TerrainHexGrid>();
-			if (thg == null) {
-				Debug.LogError("The Terrain doesn't have a TerrainHexGrid");
-				throw new MissingComponentException("The Terrain doesn't have a TerrainHexGrid component attached!");
-			}
+			//TerrainHexGrid thg = GameObject.FindGameObjectWithTag("Terrain").GetComponent<TerrainHexGrid>();
+			
 			if (mHex == null) {
-				mHex = thg.getHexFromWorldPos(transform.position);
+				setHex(h_terrainHexGrid.getHexFromWorldPos(transform.position));
 			}
-			mMovementRange = thg.getReachableHexes(mHex, hUnitStats.mMovementSpeed);
+			mMovementRange = h_terrainHexGrid.getReachableHexes(mHex, hUnitStats.m_movementSpeed, m_team);
 			mMovementChunks = new HashSet<HexChunk>();
 			foreach(Hex hex in mMovementRange) {
-				hex.setUVRect(thg.getAtlas()[(int)TerrainHexGrid.HexTextureType.Valid]);
-				if (!mMovementChunks.Contains(hex.getChunk())) {
-					mMovementChunks.Add(hex.getChunk());
+				if(hex.getEntity() == null) {
+					hex.setUVRect(h_terrainHexGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.Valid]);
+					if (!mMovementChunks.Contains(hex.getChunk())) {
+						mMovementChunks.Add(hex.getChunk());
+					}
+				}else if(hex == mHex) {
+					hex.setUVRect(h_terrainHexGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.CurrentPos]);
+					if (!mMovementChunks.Contains(hex.getChunk())) {
+						mMovementChunks.Add(hex.getChunk());
+					}
 				}
+				
 			}
 			foreach (HexChunk chunk in mMovementChunks) {
 				chunk.RebuildMesh();
@@ -46,24 +64,19 @@ public class Entity : MonoBehaviour {
 
 	public void snapToGrid() {
 		//Debug.Log("Snap to grid called");
-		if (mSnapToGrid) {
+		if (m_snapToGrid) {
 			mSnapRequested = true;
 			//Debug.Log("requesting to snap");
 			if (mOnTerrain) {
 				//TODO use a faster implementation of this
-				TerrainHexGrid thg = GameObject.FindGameObjectWithTag("Terrain").GetComponent<TerrainHexGrid>();
-				if (thg == null) {
-					Debug.LogError("The Terrain doesn't have a TerrainHexGrid");
-					throw new MissingComponentException("The Terrain doesn't have a TerrainHexGrid component attached!");
-				}
-				Hex hex = thg.getHexFromWorldPos(transform.position);
+				Hex hex = h_terrainHexGrid.getHexFromWorldPos(transform.position);
 				if (hex.isValid()) {
 					snapTo(hex.worldPosition);
-					mHex = hex;
+					setHex(hex);
 					mSnapRequested = false;
 					if(mMovementRange != null) {
 						foreach (Hex h in mMovementRange) {
-							h.setUVRect(thg.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default]);
+							h.setUVRect(h_terrainHexGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default]);
 						}
 						foreach(HexChunk chunk in mMovementChunks) {
 							chunk.RebuildMesh();
@@ -99,18 +112,13 @@ public class Entity : MonoBehaviour {
 			if (!mSnapRequested) {
 				return;
 			}
-			TerrainHexGrid thg = t.GetComponent<TerrainHexGrid>();
-			if (thg == null) {
-				Debug.LogError("The Terrain doesn't have a TerrainHexGrid");
-				throw new MissingComponentException("The Terrain doesn't have a TerrainHexGrid component attached!");
-			}
-			Hex hex = thg.getHexFromWorldPos(transform.position);
+			Hex hex = h_terrainHexGrid.getHexFromWorldPos(transform.position);
 			if (hex.isValid() && mMovementRange.Contains(hex)) {
 				snapTo(hex.worldPosition);
-				mHex = hex;
+				setHex(hex);
 				if (mMovementRange != null) {
 					foreach (Hex h in mMovementRange) {
-						h.setUVRect(thg.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default]);
+						h.setUVRect(h_terrainHexGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default]);
 					}
 					foreach (HexChunk chunk in mMovementChunks) {
 						chunk.RebuildMesh();
@@ -135,7 +143,23 @@ public class Entity : MonoBehaviour {
 		return mHex;
 	}
 
-	public void setHex(Hex hex) {
+	private void setHex(Hex hex) {
+		if (mHex != null) {
+			mHex.setEntity(null);
+		}
+		hex.setEntity(this);
 		mHex = hex;
+	}
+
+	public void showSelectionHex() {
+		if(mHex != null) {
+			mHex.setUVRectAndUpdate(h_terrainHexGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.CurrentPos]);
+		}
+	}
+
+	public void removeSelectionHex() {
+		if (mHex != null) {
+			mHex.setUVRectAndUpdate(h_terrainHexGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default]);
+		}
 	}
 }
