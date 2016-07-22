@@ -10,6 +10,7 @@ public class HexChunk : MonoBehaviour {
     int mChunkSize;
 
     Hex[,] mHexArr;
+	private Vector2 mIndexIntoGrid;
 
     private TerrainHexGrid hGrid;
 
@@ -22,10 +23,11 @@ public class HexChunk : MonoBehaviour {
     private int[] mTriangles;
     private Vector2[] mHexUVs;
 
-    public void Initialize(TerrainHexGrid grid, Vector3 chunkPos, int chunkSize, float hexSize, Material mat) {
+    public void Initialize(TerrainHexGrid grid, Vector3 chunkPos, int chunkSize, float hexSize, Material mat, Vector2 chunkIndex) {
         transform.position = chunkPos;
         mChunkSize = chunkSize;
         mHexSize = hexSize;
+		mIndexIntoGrid = chunkIndex;
 
         hGrid = grid;
         mMaterial = mat;
@@ -55,7 +57,7 @@ public class HexChunk : MonoBehaviour {
                     z += (mHexEdgeToEdgeLength / 2);
                 }
                 Rect r = hGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default];
-                mHexArr[i, j] = new Hex(x, y, z, hexSize, r, this);
+                mHexArr[i, j] = new Hex(x, y, z, hexSize, r, this, new Vector2(i, j));
 				Vector3 worldPos = new Vector3(x + transform.position.x, hGrid.getTerrain().SampleHeight(mHexArr[i, j].position + transform.position) + hGrid.offsetFromTerrain, z + transform.position.z);
 				mHexArr[i, j].worldPosition = worldPos;
             }
@@ -249,6 +251,35 @@ public class HexChunk : MonoBehaviour {
 	public Hex getHex(Vector2 index) {
 		int hexX = (int)index.x % hGrid.hexChunkSize;
 		int hexY = (int)index.y % hGrid.hexChunkSize;
+		if(hexX < 0 || hexY < 0) {
+			return null;
+		}
 		return mHexArr[hexX, hexY];
+	}
+
+	/// <summary>
+	/// Get the hexes that surround the hex specified
+	/// </summary>
+	/// <param name="hex">The Hex to check around</param>
+	/// <param name="radius">The radius around this hex to check</param>
+	/// <param name="validHexesOnly">Only return valid hexes</param>
+	/// <returns></returns>
+	public List<Hex> getSurroundingHexes(Hex hex, int radius, bool validHexesOnly) {
+		List<Hex> hexes = new List<Hex>();
+
+		return hexes;
+	}
+
+	/// <summary>
+	/// Gets the index of this chunk into the TerrainHexGrid.
+	/// Mainly to be used by the individual hexes when perfroming calculations
+	/// </summary>
+	/// <returns></returns>
+	public Vector2 getIndexIntoGrid() {
+		return mIndexIntoGrid;
+	}
+
+	public int getChunkSize() {
+		return mChunkSize;
 	}
 }

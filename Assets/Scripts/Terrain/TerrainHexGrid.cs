@@ -104,7 +104,7 @@ public class TerrainHexGrid : MonoBehaviour {
                 pos.z = j * chunkDepth;
                 GameObject obj = new GameObject("chunkX" + i + "Z" + j);
                 HexChunk chunk = obj.AddComponent<HexChunk>();
-                chunk.Initialize(this, pos, hexChunkSize, hexSize, hexMaterial);
+                chunk.Initialize(this, pos, hexChunkSize, hexSize, hexMaterial, new Vector2(i, j));
                 chunk.transform.parent = this.transform;
                 mChunkList[i, j] = chunk;
             }
@@ -216,4 +216,41 @@ public class TerrainHexGrid : MonoBehaviour {
     public Rect[] getAtlas() {
         return mAtlas;
     }
+
+	/// <summary>
+	/// Get all Hexes reachable from the specified cube coord.
+	/// </summary>
+	/// <param name="cubeCoord"></param>
+	/// <param name="range"></param>
+	/// <returns></returns>
+	public HashSet<Hex> getReachableHexes(Hex hex, int range) {
+		Vector3 cubeCoord = hex.getCubeCoords();
+		HashSet<Hex> visited = new HashSet<Hex>();
+		visited.Add(hex);
+		List<Vector3> fringe = new List<Vector3>();
+		fringe.Add(cubeCoord);
+		for (int i = 1; i <= range; i++) {
+			List<Vector3> nextFringe = new List<Vector3>();
+			foreach (Vector3 cube in fringe) {
+				for (int x = 0; x < 6; x++) {
+					Vector3 neighborCube = Hex.cubeNeighbor(cube, x);
+					Vector2 neighborOffset = Hex.getEvenQVerticalCoords(neighborCube);
+					Hex neighbor = getHexFromOffsetCoords(neighborOffset);
+					if (neighbor != null && !visited.Contains(neighbor) && neighbor.isValid()) {
+						visited.Add(neighbor);
+						nextFringe.Add(neighborCube);
+					}
+				}
+			}
+			fringe = nextFringe;
+		}
+		return visited;
+	}
+
+	public Hex getHexFromOffsetCoords(Vector2 coords) {
+		int x = (int)coords.x;//col
+		int z = (int)coords.y;//row
+		HexChunk chunk = mChunkList[x / hexChunkSize, z / hexChunkSize];
+		return chunk.getHex(new Vector2(x, z));
+	}
 }

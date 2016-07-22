@@ -119,12 +119,13 @@ public class GodController : MonoBehaviour {
                 objectToGrab.transform.parent = transform;
                 objectToGrab.GetComponent<Rigidbody>().useGravity = false;
                 objectToGrab.GetComponent<Rigidbody>().velocity = Vector3.zero;
-            } else if (objectToGrab.transform.parent == transform) {
+				objectToGrab.GetComponent<Entity>().showMovementRange();
+			} else if (objectToGrab.transform.parent == transform) {
                 objectToGrab.transform.parent = null;
                 objectToGrab.GetComponent<Rigidbody>().useGravity = true;
 				objectToGrab.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
 				objectToGrab.GetComponent<Rigidbody>().velocity = controller.getVelocity();
-				objectToGrab.GetComponent<Grabbable>().snapToGrid();
+				objectToGrab.GetComponent<Entity>().snapToGrid();
             }
         }
     }
