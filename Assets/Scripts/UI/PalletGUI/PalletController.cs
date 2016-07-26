@@ -10,16 +10,16 @@ public class PalletController : MonoBehaviour, SwipeListener {
     public Texture2D test;
     private LevelEditorController levelEditorController;
     private Controller controller;
+	private BoardManager h_boardManager;
 
-    //Rotation variables
-    public float rotationSpeed = 1.0f;
+	//Rotation variables
+	public float rotationSpeed = 1.0f;
     private int goalState = 0;
     public Vector3 toEuler;
     public Quaternion to;
     public float axis;
     public bool eulerEqual;
     private Quaternion[] rotations;
-	
 
     //UI
     private PalletUIWindow[] uiWindows = new PalletUIWindow[4];
@@ -31,6 +31,8 @@ public class PalletController : MonoBehaviour, SwipeListener {
 	[Header("Button Textures")]
 	public Texture heightmapToolsTex;
 	public Texture hexValidationToolsTex;
+	public Texture saveWorldTex;
+	public Texture loadWorldTex;
 
 
 	// Use this for initialization
@@ -42,6 +44,7 @@ public class PalletController : MonoBehaviour, SwipeListener {
         rotations[1] = Quaternion.Euler(0, 0, 90);
         rotations[2] = Quaternion.Euler(0, 0, 180);
         rotations[3] = Quaternion.Euler(0, 0, 270);
+		h_boardManager = GameObject.FindGameObjectWithTag("GameBoard").GetComponent<BoardManager>();
         to = rotations[goalState];
         levelEditorController = controller.vrHelper.dominantHand.GetComponent<LevelEditorController>();
 		tooltipText = transform.FindChild("TooltipTextArea").GetComponent<TextMesh>();
@@ -72,14 +75,14 @@ public class PalletController : MonoBehaviour, SwipeListener {
             Texture2D texture = new Texture2D(2, 2);
             texture.LoadImage(fileData);
             texture.wrapMode = TextureWrapMode.Clamp;
-            float y = ((index % 3) - 1) * .3f;
-            float x = .3f - .15f * (index / 3);
-            UIButton uiButton = uiWindows[1].addButton(new Vector2(x, y), new Vector2(.14f, .28f), "Brush Texture", texture);
+            float x = ((index % 3) - 1) * .3f;
+            float y = .3f - .15f * (index / 3);
+            UIButton uiButton = uiWindows[1].addButton(new Vector2(x, y), new Vector2(.28f, .14f), "Brush Texture", texture);
             uiButton.onTriggerDown += setBrushTexture;
             index++;
         }
 		//Slider for scaling player
-		UISlider playerScale = uiWindows[0].addSlider(new Vector2(0, 0), new Vector2(.6f, .08f), new Vector2(.04f, 2f), "Player Scale");
+		UISlider playerScale = uiWindows[0].addSlider(new Vector2(0, 0), new Vector2(.08f, .6f), new Vector2(2f, .04f), "Player Scale");
 		playerScale.min = .15f;
 		playerScale.max = 25f;
 		playerScale.setCalculatedValue(Config.godScale);
@@ -87,10 +90,24 @@ public class PalletController : MonoBehaviour, SwipeListener {
 		playerScale.onPointerDrag += updateScaleToolTip;
 
 		//Buttons to chose editor tool
-		UIButton terrainHeightButton = uiWindows[2].addButton(new Vector2(.3f, .2f), new Vector2(.18f, .36f), "Terrain Height Tools", heightmapToolsTex);
+		UIButton terrainHeightButton = uiWindows[2].addButton(new Vector2(-.2f, .3f), new Vector2(.36f, .18f), "Terrain Height Tools", heightmapToolsTex);
 		terrainHeightButton.onTriggerDown += setEditMode;
-		UIButton hexValidationButton = uiWindows[2].addButton(new Vector2(.3f, -.2f), new Vector2(.18f, .36f), "Hex Validation Tools", hexValidationToolsTex);
+		UIButton hexValidationButton = uiWindows[2].addButton(new Vector2(.2f, .3f), new Vector2(.36f, .18f), "Hex Validation Tools", hexValidationToolsTex);
 		hexValidationButton.onTriggerDown += setEditMode;
+
+		//Buttons to save and load worlds
+		UIButton saveWorldButton = uiWindows[3].addButton(new Vector2(0, .25f), new Vector2(.8f, .4f), "Save World", saveWorldTex);
+		saveWorldButton.onTriggerDown += saveWorld;
+		UIButton loadWorldButton = uiWindows[3].addButton(new Vector2(0, -.25f), new Vector2(.8f, .4f), "Load World", loadWorldTex);
+		loadWorldButton.onTriggerDown += loadWorld;
+	}
+
+	void saveWorld(UIButton button) {
+		h_boardManager.Save("VR_World.godmap");
+	}
+
+	void loadWorld(UIButton button) {
+		h_boardManager.Load("VR_World.godmap");
 	}
 
 	void updateScaleToolTip(UISlider slider) {

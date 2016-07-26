@@ -12,6 +12,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
     [Range(0.0f, 1.0f)] public float opacity = 1.0f;
     [Range(0.0f, 1.0f)]public float timeBetweenBrush = 0.1f;
     public GameObject brushCursorPrefab;
+	public Texture2D defaultBrushTex;
 
 	public enum EditorMode{ TERRAIN_HEIGHT, TERRAIN_TEXTURE, HEX_VALIDATION};
 
@@ -209,7 +210,8 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         if (size < 4)
             size = 4;
         this.size = size;
-        Texture2D tex = mCursorInstance.GetComponent<Projector>().material.GetTexture("_ShadowTex") as Texture2D;
+		//Texture2D tex = mCursorInstance.GetComponent<Projector>().material.GetTexture("_ShadowTex") as Texture2D;
+		Texture2D tex = defaultBrushTex;
         Texture2D tCopy = Instantiate(tex);
         TextureScale.Point(tCopy, size, size);
         Color32[] pixels = tCopy.GetPixels32();

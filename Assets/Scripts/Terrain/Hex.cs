@@ -151,9 +151,9 @@ public class Hex{
         stream.Read(temp, 0, sizeof(bool));
         mValid = BitConverter.ToBoolean(temp, 0);
 
-        // read ignore auto validation
-        if (isLevelEditor) {
-            stream.Read(temp, 0, sizeof(bool));
+		// read ignore auto validation
+		stream.Read(temp, 0, sizeof(bool));
+		if (isLevelEditor) {
             mIgnoreAutoValidation = BitConverter.ToBoolean(temp, 0);
         } else {
             mIgnoreAutoValidation = true;

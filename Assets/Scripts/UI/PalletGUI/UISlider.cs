@@ -50,7 +50,7 @@ public class UISlider : MonoBehaviour {
 				onPointerDrag(this);
 			}
 			slider.position = controller.laserPointer.collisionPoint;
-			setValue(slider.localPosition.x+.5f);
+			setValue(slider.localPosition.y+.5f);
         }
 		if (controller.getButtonUp("trigger")) {
 			draggingSlider = false;
@@ -83,8 +83,8 @@ public class UISlider : MonoBehaviour {
     public void setValue(float value) {
         this.value = value;
 		Vector3 pos = slider.localPosition;
-		pos.x = Mathf.Clamp(value - .5f, -.5f, .5f);
-		pos.y = 0;
+		pos.x = 0;
+		pos.y = Mathf.Clamp(value - .5f, -.5f, .5f);
 		pos.z = 0;
 		slider.localPosition = pos;
 		calculatedValue = calcValue();

@@ -35,7 +35,7 @@ public class BoardManager : MonoBehaviour {
             Load("ExampleBoard.godmap");
 	}
 
-	void Save(string filename) {
+	public void Save(string filename) {
         FileStream file = new FileStream(Application.dataPath + "/" + filename, FileMode.OpenOrCreate, FileAccess.Write);
         
         mTerrainManager.Save(file);
@@ -45,7 +45,7 @@ public class BoardManager : MonoBehaviour {
 		file.Close();
 	}
 
-	void Load(string filename) {
+	public void Load(string filename) {
         FileStream file = new FileStream(Application.dataPath + "/" + filename, FileMode.Open, FileAccess.Read);
 
         mTerrainManager.Load(file);
