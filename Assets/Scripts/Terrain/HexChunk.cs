@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 public class HexChunk : MonoBehaviour {
 
@@ -22,6 +23,8 @@ public class HexChunk : MonoBehaviour {
     private Vector3[] mHexVerts;
     private int[] mTriangles;
     private Vector2[] mHexUVs;
+
+    private bool mIsLevelEditor;
 
     public void Initialize(TerrainHexGrid grid, Vector3 chunkPos, int chunkSize, float hexSize, Material mat, Vector2 chunkIndex) {
         transform.position = chunkPos;
@@ -46,6 +49,7 @@ public class HexChunk : MonoBehaviour {
 
         mMeshRenderer.sharedMaterial = mMaterial;
 
+        mIsLevelEditor = true;
 
         for (int i = 0; i < chunkSize; i++) {
             for (int j = 0; j < chunkSize; j++) {
@@ -158,7 +162,7 @@ public class HexChunk : MonoBehaviour {
         for (int i = 0; i < mChunkSize; i++) {
             for (int j = 0; j < mChunkSize; j++) {
                 // if the hex is ignoring autovalidate, we need to display it so the user knows
-                if (mHexArr[i, j].isValid() || mHexArr[i, j].ignoreAutoValidate()) {
+                if (mHexArr[i, j].isValid() || (mHexArr[i, j].ignoreAutoValidate() && mIsLevelEditor)) {
                     // build verts
                     for (int k = 0; k < 6; k++) {
                         Vector3 v = new Vector3();
@@ -282,4 +286,21 @@ public class HexChunk : MonoBehaviour {
 	public int getChunkSize() {
 		return mChunkSize;
 	}
+
+    public void Save(FileStream stream) {
+        for (int i = 0; i < mChunkSize; i++) {
+            for (int j = 0; j < mChunkSize; j++) {
+                mHexArr[i, j].Save(stream);
+            }
+        }
+    }
+
+    public void Load(FileStream stream, bool isLevelEditor) {
+        mIsLevelEditor = isLevelEditor;
+        for (int i = 0; i < mChunkSize; i++) {
+            for (int j = 0; j < mChunkSize; j++) {
+                mHexArr[i, j].Load(stream, isLevelEditor);
+            }
+        }
+    }
 }

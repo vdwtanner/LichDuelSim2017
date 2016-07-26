@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 public class TerrainHexGrid : MonoBehaviour {
 
@@ -141,6 +143,88 @@ public class TerrainHexGrid : MonoBehaviour {
         }
 
         yield return null;
+    }
+
+    public void Save(FileStream stream) {
+        // write width of chunk array
+        stream.Write(BitConverter.GetBytes(mChunksWidth), 0, sizeof(int));
+
+        // write depth of chunk array
+        stream.Write(BitConverter.GetBytes(mChunksDepth), 0, sizeof(int));
+
+        // write chunksize
+        stream.Write(BitConverter.GetBytes(hexChunkSize), 0, sizeof(int));
+
+        // write hexsize
+        stream.Write(BitConverter.GetBytes(hexSize), 0, sizeof(float));
+
+        // write offset from terrain
+        stream.Write(BitConverter.GetBytes(offsetFromTerrain), 0, sizeof(float));
+
+        // write chunks
+        for (int i = 0; i < mChunksWidth; i++) {
+            for (int j = 0; j < mChunksDepth; j++) {
+                mChunkList[i, j].Save(stream);
+            }
+        }
+    }
+
+    public void Load(FileStream stream, bool isLevelEditor) {
+        byte[] temp = new byte[4];
+        stream.Read(temp, 0, sizeof(int));
+        mChunksWidth = BitConverter.ToInt32(temp, 0);
+
+        stream.Read(temp, 0, sizeof(int));
+        mChunksDepth = BitConverter.ToInt32(temp, 0);
+
+        stream.Read(temp, 0, sizeof(int));
+        hexChunkSize = BitConverter.ToInt32(temp, 0);
+
+        stream.Read(temp, 0, sizeof(float));
+        hexSize = BitConverter.ToSingle(temp, 0);
+
+        stream.Read(temp, 0, sizeof(float));
+        offsetFromTerrain = BitConverter.ToSingle(temp, 0);
+
+        // figure out our other lengths from the hexSize
+        mHexSideLength = hexSize * Mathf.Cos((1.0f / 3.0f) * Mathf.PI);
+        mHexEdgeToEdgeLength = hexSize * Mathf.Sin((1.0f / 3.0f) * Mathf.PI);
+
+        float terrainWidth = hTerrain.terrainData.size.x;
+        float terrainDepth = hTerrain.terrainData.size.z;
+        mGridWidth = (int)((terrainWidth / (hexSize + mHexSideLength)) * 2);
+        mGridDepth = (int)(terrainDepth / mHexEdgeToEdgeLength);
+
+        mChunksWidth = (int)Mathf.Ceil(mGridWidth / (float)hexChunkSize);
+        mChunksDepth = (int)Mathf.Ceil(mGridDepth / (float)hexChunkSize);
+
+        float chunkWidth = (hexSize + mHexSideLength) * (hexChunkSize / 2);
+        float chunkDepth = (mHexEdgeToEdgeLength) * hexChunkSize;
+        if (mChunkList != null) {
+            for (int i = 0; i < mChunksWidth; i++) {
+                for (int j = 0; j < mChunksDepth; j++) {
+                    Destroy(mChunkList[i, j].gameObject);
+                }
+            }
+        }
+        mChunkList = new HexChunk[mChunksWidth, mChunksDepth];
+        for (int i = 0; i < mChunksWidth; i++) {
+            for (int j = 0; j < mChunksDepth; j++) {
+                Vector3 pos = new Vector3();
+                pos.x = i * chunkWidth;
+                pos.y = hTerrain.transform.position.y;
+                pos.z = j * chunkDepth;
+                GameObject obj = new GameObject("chunkX" + i + "Z" + j);
+                HexChunk chunk = obj.AddComponent<HexChunk>();
+                chunk.Initialize(this, pos, hexChunkSize, hexSize, hexMaterial, new Vector2(i, j));
+                chunk.transform.parent = this.transform;
+                mChunkList[i, j] = chunk;
+
+                mChunkList[i, j].Load(stream, isLevelEditor);
+            }
+        }
+
+        //TerrainModified();
     }
 
 

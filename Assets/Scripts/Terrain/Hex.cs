@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 public class Hex{
 
@@ -134,4 +136,27 @@ public class Hex{
 	public void setEntity(Entity entity) {
 		h_entity = entity;
 	}
+
+    public void Save(FileStream stream) {
+        // save validity state
+        stream.Write(BitConverter.GetBytes(mValid), 0, sizeof(bool));
+        // save ignore auto validation state (for reloading the map in the level editor)
+        stream.Write(BitConverter.GetBytes(mIgnoreAutoValidation), 0, sizeof(bool));
+    }
+
+    public void Load(FileStream stream, bool isLevelEditor) {
+        byte[] temp = new byte[sizeof(bool)];
+
+        // read hex validity
+        stream.Read(temp, 0, sizeof(bool));
+        mValid = BitConverter.ToBoolean(temp, 0);
+
+        // read ignore auto validation
+        if (isLevelEditor) {
+            stream.Read(temp, 0, sizeof(bool));
+            mIgnoreAutoValidation = BitConverter.ToBoolean(temp, 0);
+        } else {
+            mIgnoreAutoValidation = true;
+        }
+    }
 }

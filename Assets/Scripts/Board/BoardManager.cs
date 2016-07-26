@@ -7,16 +7,18 @@ using System.IO;
 // in the file, while the other managers handle raw data
 public class BoardManager : MonoBehaviour {
 
-	protected TerrainManager hTerrainManager;
-    protected TerrainHexGrid hHexGrid;
+    public bool isLevelEditor;
+
+	protected TerrainManager mTerrainManager;
+    protected TerrainHexGrid mHexGrid;
 
 	// Use this for initialization
 	void Start () {
-        hTerrainManager = GetComponentInChildren<TerrainManager>();
-        if (hTerrainManager == null)
+        mTerrainManager = GetComponentInChildren<TerrainManager>();
+        if (mTerrainManager == null)
             Debug.LogError("Board has no terrain!");
-        hHexGrid = GetComponentInChildren<TerrainHexGrid>();
-        if (hHexGrid == null)
+        mHexGrid = GetComponentInChildren<TerrainHexGrid>();
+        if (mHexGrid == null)
             Debug.LogError("Board has no hex grid!");
 
 
@@ -24,16 +26,32 @@ public class BoardManager : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
+        bool save = Input.GetKeyUp(KeyCode.K);
+        bool load = Input.GetKeyUp(KeyCode.L);
+
+        if (save)
+            Save("ExampleBoard.godmap");
+        if (load)
+            Load("ExampleBoard.godmap");
 	}
 
 	void Save(string filename) {
-		FileStream file = File.Create(Application.persistentDataPath + "/" + filename);
+        FileStream file = new FileStream(Application.dataPath + "/" + filename, FileMode.OpenOrCreate, FileAccess.Write);
+        
+        mTerrainManager.Save(file);
+
+        mHexGrid.Save(file);
 
 		file.Close();
 	}
 
 	void Load(string filename) {
-		
-	}
+        FileStream file = new FileStream(Application.dataPath + "/" + filename, FileMode.Open, FileAccess.Read);
+
+        mTerrainManager.Load(file);
+
+        mHexGrid.Load(file, isLevelEditor);
+
+        file.Close();
+    }
 }
