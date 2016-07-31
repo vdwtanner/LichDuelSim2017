@@ -13,6 +13,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
     [Range(0.0f, 1.0f)]public float timeBetweenBrush = 0.1f;
     public GameObject brushCursorPrefab;
 	public Texture2D defaultBrushTex;
+	public int defaultBrushSize = 15;
 
 	public enum EditorMode{ TERRAIN_HEIGHT, TERRAIN_TEXTURE, HEX_VALIDATION};
 
@@ -45,7 +46,8 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
 	void Start () {
         // create the instance of our cursor
         mCursorInstance = (GameObject)Instantiate(brushCursorPrefab, new Vector3(0.0f, 0.0f, 0.0f), Quaternion.Euler(90, 0, 0));
-
+		setBrushTexture(defaultBrushTex);
+		setBrushSize(defaultBrushSize);
         // add all tool scripts to the object we're on
         /*mAddRemoveTool = new AddRemoveHeightTool();
         mAddRemoveTool.Initialize(this);
@@ -210,8 +212,8 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         if (size < 4)
             size = 4;
         this.size = size;
-		//Texture2D tex = mCursorInstance.GetComponent<Projector>().material.GetTexture("_ShadowTex") as Texture2D;
-		Texture2D tex = defaultBrushTex;
+		Texture2D tex = mCursorInstance.GetComponent<Projector>().material.GetTexture("_ShadowTex") as Texture2D;
+		//Texture2D tex = defaultBrushTex;
         Texture2D tCopy = Instantiate(tex);
         TextureScale.Point(tCopy, size, size);
         Color32[] pixels = tCopy.GetPixels32();
