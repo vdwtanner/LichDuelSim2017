@@ -166,7 +166,7 @@ public class TerrainEditor : MonoBehaviour, SwipeListener {
         if(controller != null) {
             float sizeChange = controller.getAxis("scrollWheel").x / 2.0f;
 
-            brushCursorPrefab.transform.rotation = controller.transform.rotation;
+            mCursorInstance.transform.rotation = controller.transform.rotation;
             if (sizeChange != 0) {
                 if (mSizeBeforeResize == -1) {
                     mSizeBeforeResize = getBrushSize();

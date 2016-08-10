@@ -20,6 +20,7 @@ public class TerrainManager : MonoBehaviour {
             Debug.LogError("TerrainManager has no BoardManager parent!");
         mTerrain = GetComponent<Terrain>();
 
+
     }
 
     // assumes the file ptr in the stream is currently at the beginnning of the terrain data

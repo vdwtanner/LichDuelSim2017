@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
+// MEMORY TO BE TRIMMED HERE. CURRENTLY CHUNKS THAT HANG OFF EDGES STILL CONTAIN EXTRA DISABLED HEXES INSTEAD OF
+// MAKING THEIR HEX ARRAY SMALLER
 public class HexChunk : MonoBehaviour {
 
     float mHexSize;
@@ -62,7 +64,7 @@ public class HexChunk : MonoBehaviour {
                 }
                 Rect r = hGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default];
                 mHexArr[i, j] = new Hex(x, y, z, hexSize, r, this, new Vector2(i, j));
-				Vector3 worldPos = new Vector3(x + transform.position.x, hGrid.getTerrain().SampleHeight(mHexArr[i, j].position + transform.position) + hGrid.offsetFromTerrain, z + transform.position.z);
+				Vector3 worldPos = new Vector3(x, hGrid.getTerrain().SampleHeight(mHexArr[i, j].position + transform.position) + hGrid.offsetFromTerrain, z) + transform.position;
 				mHexArr[i, j].worldPosition = worldPos;
             }
         }
@@ -114,32 +116,36 @@ public class HexChunk : MonoBehaviour {
         Rect r = hGrid.getAtlas()[(int)TerrainHexGrid.HexTextureType.Default];
         for (int i = 0; i < mChunkSize; i++) {
             for (int j = 0; j < mChunkSize; j++) {
-                if (!mHexArr[i, j].ignoreAutoValidate()) {
-                    if (isValidHex(mHexArr[i, j].position + transform.position)) {
-                        mHexArr[i, j].setValid(true, false);
-                    } else {
-                        mHexArr[i, j].setValid(false, false);
+                if (!isPositionOffTerrain(mHexArr[i, j].position + transform.position)) {
+                    if (!mHexArr[i, j].ignoreAutoValidate()) {
+                        if (isValidHex(mHexArr[i, j].position + transform.position)) {
+                            mHexArr[i, j].setValid(true, false);
+                        } else {
+                            mHexArr[i, j].setValid(false, false);
+                        }
+                        mHexArr[i, j].setUVRect(r);
                     }
-                    mHexArr[i, j].setUVRect(r);
+                } else {
+                    mHexArr[i, j].setValid(false, false);
                 }
             }
         }
     }
 
-    public bool isValidHex(Vector3 pos) {
+    public bool isValidHex(Vector3 worldPos) {
         float maxVariance = hGrid.maxVariance;
-        float sum = hGrid.getTerrain().SampleHeight(pos);
+        float sum = hGrid.getTerrain().SampleHeight(worldPos);
         Vector3[] heights = new Vector3[6];
         for (int i = 0; i < 6; i++) {
-            heights[i] = mHexVerts[i] + pos;
+            heights[i] = mHexVerts[i] + worldPos;
             heights[i].y = hGrid.getTerrain().SampleHeight(heights[i]);
             sum += heights[i].y;
         }
         float avg = sum / 7.0f;
-        if (Mathf.Abs(hGrid.getTerrain().SampleHeight(pos) - avg) > maxVariance)
+        if (Mathf.Abs(hGrid.getTerrain().SampleHeight(worldPos) - avg) > maxVariance)
             return false;
         for (int i = 0; i < 6; i++) {
-            if (Mathf.Abs(hGrid.getTerrain().SampleHeight(mHexVerts[i] + pos) - avg) > maxVariance)
+            if (Mathf.Abs(hGrid.getTerrain().SampleHeight(mHexVerts[i] + worldPos) - avg) > maxVariance)
                 return false;
         }
         if (Mathf.Abs(getDiffFromCoplanar(heights[0], heights[1], heights[3], heights[4])) > hGrid.coplanarTolerance)
@@ -154,6 +160,19 @@ public class HexChunk : MonoBehaviour {
         return Vector3.Dot((v3 - v1), Vector3.Cross((v2 - v1), (v4 - v3)));
     }
 
+    bool isPositionOffTerrain(Vector3 worldPos) {
+        Terrain terr = hGrid.getTerrain();
+
+        Vector3 minPoint = terr.transform.position;
+        Vector3 maxPoint = terr.transform.position + terr.terrainData.size;
+
+        if (worldPos.x > maxPoint.x || worldPos.x < minPoint.x)
+            return true;
+        if (worldPos.z > maxPoint.z || worldPos.z < minPoint.z)
+            return true;
+        return false;
+    }
+
     public void RebuildMesh() {
         List<Vector3> verts = new List<Vector3>();
         List<int> tris = new List<int>();
@@ -166,11 +185,11 @@ public class HexChunk : MonoBehaviour {
                     // build verts
                     for (int k = 0; k < 6; k++) {
                         Vector3 v = new Vector3();
-                        v.x = mHexVerts[k].x;
+                        v.x = mHexVerts[k].x + mHexArr[i, j].position.x;
                         v.y = 0;
-                        v.z = mHexVerts[k].z;
-                        v.y = hGrid.getTerrain().SampleHeight(v + mHexArr[i, j].position + transform.position) + hGrid.offsetFromTerrain;
-                        verts.Add(v + mHexArr[i, j].position);
+                        v.z = mHexVerts[k].z + mHexArr[i, j].position.z;
+                        v.y = hGrid.getTerrain().SampleHeight(v + transform.position) + hGrid.offsetFromTerrain;
+                        verts.Add(v);
                     }
                     // build tris
                     for (int k = 0; k < 12; k++) {
